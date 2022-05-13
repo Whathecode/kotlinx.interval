@@ -11,14 +11,19 @@ abstract class IntervalTest<T : Comparable<T>>( val a: T, val b: T, val c: T )
 {
     init { require( a < b && b < c ) }
 
+    abstract fun createInterval( start: T, isStartIncluded: Boolean, end: T, isEndIncluded: Boolean ): Interval<T>
+
+    private fun createClosedInterval( start: T, end: T ): Interval<T> = createInterval( start, true, end, true )
+    private fun createOpenInterval( start: T, end: T ): Interval<T> = createInterval( start, false, end, false )
+
     /**
      * Create a closed, open, and both half-open intervals using [start] and [end].
      */
     private fun createAllInclusionTypeIntervals( start: T, end: T ): List<Interval<T>> = listOf(
         createClosedInterval( start, end ),
         createOpenInterval( start, end ),
-        Interval( start, true, end, false ),
-        Interval( start, false, end, true )
+        createInterval( start, true, end, false ),
+        createInterval( start, false, end, true )
     )
 
 
@@ -26,8 +31,8 @@ abstract class IntervalTest<T : Comparable<T>>( val a: T, val b: T, val c: T )
     fun constructing_open_or_half_open_intervals_with_same_start_and_end_fails()
     {
         assertFailsWith<IllegalArgumentException> { createOpenInterval( a, a ) }
-        assertFailsWith<IllegalArgumentException> { Interval( a, true, a, false ) }
-        assertFailsWith<IllegalArgumentException> { Interval( a, false, a, true ) }
+        assertFailsWith<IllegalArgumentException> { createInterval( a, true, a, false ) }
+        assertFailsWith<IllegalArgumentException> { createInterval( a, false, a, true ) }
     }
 
     @Test
