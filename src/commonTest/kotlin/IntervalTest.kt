@@ -7,11 +7,15 @@ import kotlin.test.*
  * Tests for [Interval] which creates intervals for testing
  * using [a], which should be smaller than [b], which should be smaller than [c].
  */
-abstract class IntervalTest<T : Comparable<T>>( val a: T, val b: T, val c: T )
+interface IntervalTest<T : Comparable<T>>
 {
-    init { require( a < b && b < c ) }
+    val a: T
+    val b: T
+    val c: T
+    val typeOperations: TypeOperations<T>
 
-    abstract fun createInterval( start: T, isStartIncluded: Boolean, end: T, isEndIncluded: Boolean ): Interval<T>
+    private fun createInterval( start: T, isStartIncluded: Boolean, end: T, isEndIncluded: Boolean ) =
+        Interval( start, isStartIncluded, end, isEndIncluded, typeOperations )
 
     private fun createClosedInterval( start: T, end: T ): Interval<T> = createInterval( start, true, end, true )
     private fun createOpenInterval( start: T, end: T ): Interval<T> = createInterval( start, false, end, false )
@@ -26,6 +30,12 @@ abstract class IntervalTest<T : Comparable<T>>( val a: T, val b: T, val c: T )
         createInterval( start, false, end, true )
     )
 
+
+    @Test
+    fun is_correct_test_configuration()
+    {
+        assertTrue( a < b && b < c )
+    }
 
     @Test
     fun constructing_open_or_half_open_intervals_with_same_start_and_end_fails()
@@ -64,4 +74,28 @@ abstract class IntervalTest<T : Comparable<T>>( val a: T, val b: T, val c: T )
         val reversed = createAllInclusionTypeIntervals( b, a )
         reversed.forEach { assertTrue( it.isReversed ) }
     }
+}
+
+
+/**
+ * Create an [IntervalTest] for type [T] which creates intervals for testing
+ * using [a], which should be smaller than [b], which should be smaller than [c]
+ *
+ * @throws UnsupportedOperationException if [typeOperations] needs to be specified since no default is supported.
+ */
+inline fun <reified T : Comparable<T>> createIntervalTest(
+    a: T,
+    b: T,
+    c: T,
+    /**
+     * Specify how to access predefined operators of type [T].
+     * For basic Kotlin types, this parameter is initialized with a matching default.
+     */
+    typeOperations: TypeOperations<T> = getBasicTypeOperationsFor()
+) : IntervalTest<T> = object : IntervalTest<T>
+{
+    override val a: T = a
+    override val b: T = b
+    override val c: T = c
+    override val typeOperations: TypeOperations<T> = typeOperations
 }

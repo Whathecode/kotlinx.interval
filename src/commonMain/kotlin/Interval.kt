@@ -7,11 +7,15 @@ package com.github.whathecode.kotlinx.interval
  *
  * @throws IllegalArgumentException if an open or half-open interval with the same start and end value is specified.
  */
-abstract class Interval<T : Comparable<T>>(
+class Interval<T : Comparable<T>>(
     val start: T,
     val isStartIncluded: Boolean,
     val end: T,
-    val isEndIncluded: Boolean
+    val isEndIncluded: Boolean,
+    /**
+     * Provide access to the predefined set of operators of [T].
+     */
+    typeOperations: TypeOperations<T>
 )
 {
     init
@@ -21,6 +25,9 @@ abstract class Interval<T : Comparable<T>>(
             require( start != end ) { "Open or half-open intervals should have differing start and end value." }
         }
     }
+
+    // Should only be used when the result is certain to fall within the range of type `T`.
+    private val unsafeSubtract = typeOperations::unsafeSubtract
 
 
     /**
@@ -60,10 +67,4 @@ abstract class Interval<T : Comparable<T>>(
         result = 31 * result + isEndIncluded.hashCode()
         return result
     }
-
-
-    /**
-     * Subtract [b] from [a].
-     */
-    protected abstract fun subtract( a: T, b: T ): T
 }
