@@ -46,6 +46,13 @@ class Interval<T : Comparable<T>>(
     inline val isReversed: Boolean get() =  start > end
 
     /**
+     * The absolute difference between [start] and [end].
+     */
+    val size: T get() =
+        if ( start < end ) unsafeSubtract( end, start )
+        else unsafeSubtract( start, end )
+
+    /**
      * Determines whether this interval equals [other]'s constructor parameters exactly,
      * i.e., not whether they represent the same set of [T] values, such as matching inverse intervals.
      */
