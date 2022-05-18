@@ -36,57 +36,69 @@ inline fun <reified T> getBasicTypeOperationsFor(): TypeOperations<T>
 }
 
 
-private object ByteOperations : TypeOperations<Byte>
+internal object ByteOperations : TypeOperations<Byte>
 {
+    override val additiveIdentity: Byte = 0
     override fun unsafeSubtract( a: Byte, b: Byte ): Byte = (a - b).toByte()
 }
 
-private object ShortOperations : TypeOperations<Short>
+internal object ShortOperations : TypeOperations<Short>
 {
+    override val additiveIdentity: Short = 0
     override fun unsafeSubtract( a: Short, b: Short ): Short = (a - b).toShort()
 }
 
-private object IntOperations : TypeOperations<Int>
+internal object IntOperations : TypeOperations<Int>
 {
+    override val additiveIdentity: Int = 0
     override fun unsafeSubtract( a: Int, b: Int ): Int = a - b
 }
 
-private object LongOperations : TypeOperations<Long>
+internal object LongOperations : TypeOperations<Long>
 {
+    override val additiveIdentity: Long = 0
     override fun unsafeSubtract( a: Long, b: Long ): Long = a - b
 }
 
-private object FloatOperations : TypeOperations<Float>
+internal object FloatOperations : TypeOperations<Float>
 {
+    override val additiveIdentity: Float = 0f
     override fun unsafeSubtract( a: Float, b: Float ): Float = a - b
 }
 
-private object DoubleOperations : TypeOperations<Double>
+internal object DoubleOperations : TypeOperations<Double>
 {
+    override val additiveIdentity: Double = 0.0
     override fun unsafeSubtract( a: Double, b: Double ): Double = a - b
 }
 
-private object UByteOperations : TypeOperations<UByte>
+internal object UByteOperations : TypeOperations<UByte>
 {
+    override val additiveIdentity: UByte = 0.toUByte()
     override fun unsafeSubtract( a: UByte, b: UByte ): UByte = (a - b).toUByte()
 }
 
-private object UShortOperations : TypeOperations<UShort>
+internal object UShortOperations : TypeOperations<UShort>
 {
+    override val additiveIdentity: UShort = 0.toUShort()
     override fun unsafeSubtract( a: UShort, b: UShort ): UShort = (a - b).toUShort()
 }
 
-private object UIntOperations : TypeOperations<UInt>
+internal object UIntOperations : TypeOperations<UInt>
 {
+    override val additiveIdentity: UInt = 0.toUInt()
     override fun unsafeSubtract( a: UInt, b: UInt ): UInt = a - b
 }
 
-private object ULongOperations : TypeOperations<ULong>
+internal object ULongOperations : TypeOperations<ULong>
 {
-    override fun unsafeSubtract(a: ULong, b: ULong ): ULong = a - b
+    override val additiveIdentity: ULong = 0.toULong()
+    override fun unsafeSubtract( a: ULong, b: ULong ): ULong = a - b
 }
 
-private object CharOperations : TypeOperations<Char>
+internal object CharOperations : TypeOperations<Char>
 {
+    // HACK: a getter is added to work around a JS legacy boxing/unboxing bug.
+    override val additiveIdentity: Char get() = Char( 0 )
     override fun unsafeSubtract( a: Char, b: Char ): Char = (a - b).toChar()
 }

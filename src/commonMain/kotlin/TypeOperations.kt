@@ -7,6 +7,11 @@ package com.github.whathecode.kotlinx.interval
 interface TypeOperations<T>
 {
     /**
+     * When this value is added to any value x, it yields x. I.e. commonly "zero".
+     */
+    val additiveIdentity: T
+
+    /**
      * The binary operation `a - b`, not safeguarded against overflows.
      * The resulting type is cast back to type [T].
      */

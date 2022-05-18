@@ -13,16 +13,6 @@ interface IntervalTest<T : Comparable<T>>
     val b: T
     val c: T
 
-    /**
-     * Expected size of the interval between [a] and [b].
-     */
-    val abSize: T
-
-    /**
-     * Zero, equivalent to an empty size.
-     */
-    val zero: T
-
     val typeOperations: TypeOperations<T>
 
     private fun createInterval( start: T, isStartIncluded: Boolean, end: T, isEndIncluded: Boolean ) =
@@ -89,6 +79,7 @@ interface IntervalTest<T : Comparable<T>>
     @Test
     fun size_for_normal_and_reverse_intervals_is_the_same()
     {
+        val abSize = typeOperations.unsafeSubtract( b, a )
         val abIntervals = createAllInclusionTypeIntervals( a, b ) + createAllInclusionTypeIntervals( b, a )
         abIntervals.forEach { assertEquals( abSize, it.size ) }
     }
@@ -96,6 +87,7 @@ interface IntervalTest<T : Comparable<T>>
     @Test
     fun size_for_empty_interval_is_zero()
     {
+        val zero = typeOperations.additiveIdentity
         val emptyInterval = createClosedInterval( a, a )
         assertEquals( zero, emptyInterval.size )
     }
@@ -113,14 +105,6 @@ inline fun <reified T : Comparable<T>> createIntervalTest(
     b: T,
     c: T,
     /**
-     * Expected size of the interval between [a] and [b].
-     */
-    abSize: T,
-    /**
-     * Zero, equivalent to an empty size.
-     */
-    zero: T,
-    /**
      * Specify how to access predefined operators of type [T].
      * For basic Kotlin types, this parameter is initialized with a matching default.
      */
@@ -130,7 +114,5 @@ inline fun <reified T : Comparable<T>> createIntervalTest(
     override val a: T = a
     override val b: T = b
     override val c: T = c
-    override val abSize: T = abSize
-    override val zero: T = zero
     override val typeOperations: TypeOperations<T> = typeOperations
 }
