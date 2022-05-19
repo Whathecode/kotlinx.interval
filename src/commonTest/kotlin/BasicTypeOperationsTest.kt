@@ -14,7 +14,10 @@ class BasicTypeOperationsTest
     @Test
     fun getBasicTypeOperationsFor_fails_for_unknown_types()
     {
-        class Unknown
+        class Unknown : Comparable<Unknown>
+        {
+            override fun compareTo( other: Unknown ): Int = 0
+        }
 
         assertFailsWith<UnsupportedOperationException> { getBasicTypeOperationsFor<Unknown>() }
     }
