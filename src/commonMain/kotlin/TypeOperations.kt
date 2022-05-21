@@ -17,6 +17,17 @@ interface TypeOperations<T : Comparable<T>>
     val minValue: T
 
     /**
+     * The maximum value an instance of [T] can have.
+     */
+    val maxValue: T
+
+    /**
+     * The binary operation `a + b`, not safeguarded against overflows.
+     * The resulting type is cast back to type [T].
+     */
+    fun unsafeAdd( a: T, b: T ): T
+
+    /**
      * The binary operation `a - b`, not safeguarded against overflows.
      * The resulting type is cast back to type [T].
      */

@@ -32,6 +32,22 @@ abstract class TypeOperationsTest<T : Comparable<T>>(
     }
 
     @Test
+    fun maxValue_overflows_on_unsafeAdd()
+    {
+        val overflowMax = typeOperations.unsafeAdd( typeOperations.maxValue, a )
+
+        // Types either overflow, or are coerced to max value (e.g. floating points).
+        assertTrue( overflowMax < a || overflowMax == typeOperations.maxValue )
+    }
+
+    @Test
+    fun unsafeAdd()
+    {
+        val result = typeOperations.unsafeAdd( aMinusB, b )
+        assertEquals( a, result )
+    }
+
+    @Test
     fun unsafeSubtract_with_differing_values()
     {
         val result = typeOperations.unsafeSubtract( a, b )
@@ -39,7 +55,7 @@ abstract class TypeOperationsTest<T : Comparable<T>>(
     }
 
     @Test
-    fun unsafeSubtract_with_same_values_results_in_additive_identity()
+    fun unsafeSubtract_value_from_itself_results_in_additive_identity()
     {
         val result = typeOperations.unsafeSubtract( a, a )
         assertEquals( typeOperations.additiveIdentity, result )
