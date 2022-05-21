@@ -3,11 +3,12 @@ package com.github.whathecode.kotlinx.interval
 
 /**
  * Represents a set of all [T] values lying between a provided [start] and [end] value.
+ * [TSize] is the type used to represent the distance between [T] values.
  * The interval can be closed, open, or half-open, as determined by [isStartIncluded] and [isEndIncluded].
  *
  * @throws IllegalArgumentException if an open or half-open interval with the same start and end value is specified.
  */
-class Interval<T : Comparable<T>>(
+abstract class Interval<T : Comparable<T>, TSize : Comparable<TSize>>(
     val start: T,
     val isStartIncluded: Boolean,
     val end: T,
@@ -15,7 +16,11 @@ class Interval<T : Comparable<T>>(
     /**
      * Provide access to the predefined set of operators of [T].
      */
-    typeOperations: TypeOperations<T>
+    private val valueOperations: TypeOperations<T>,
+    /**
+     * Provide access to the predefined set of operators of [TSize].
+     */
+    private val sizeOperations: TypeOperations<TSize>
 )
 {
     init
@@ -26,8 +31,10 @@ class Interval<T : Comparable<T>>(
         }
     }
 
-    // Should only be used when the result is certain to fall within the range of type `T`.
-    private val unsafeSubtract = typeOperations::unsafeSubtract
+    /**
+     * Return the distance from [value] to the additive identity (usually "zero") of [T].
+     */
+    protected abstract fun getDistanceTo( value: T ): TSize
 
 
     /**
@@ -48,9 +55,23 @@ class Interval<T : Comparable<T>>(
     /**
      * The absolute difference between [start] and [end].
      */
-    val size: T get() =
-        if ( start < end ) unsafeSubtract( end, start )
-        else unsafeSubtract( start, end )
+    val size: TSize get()
+    {
+        val zero = valueOperations.additiveIdentity
+        val startDistance = getDistanceTo( start )
+        val endDistance = getDistanceTo( end )
+        val valuesHaveOppositeSign = start <= zero != end <= zero
+
+        return if ( valuesHaveOppositeSign )
+        {
+            sizeOperations.unsafeAdd( startDistance, endDistance )
+        }
+        else
+        {
+            if ( startDistance < endDistance ) sizeOperations.unsafeSubtract( endDistance, startDistance )
+            else sizeOperations.unsafeSubtract( startDistance, endDistance )
+        }
+    }
 
     /**
      * Determines whether this interval equals [other]'s constructor parameters exactly,
@@ -58,7 +79,7 @@ class Interval<T : Comparable<T>>(
      */
     override fun equals( other: Any? ): Boolean
     {
-        if ( other !is Interval<*> ) return false
+        if ( other !is Interval<*, *> ) return false
 
         return this.start == other.start
             && this.end == other.end

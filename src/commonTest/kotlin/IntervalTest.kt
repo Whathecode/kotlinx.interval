@@ -7,24 +7,29 @@ import kotlin.test.*
  * Tests for [Interval] which creates intervals for testing
  * using [a], which should be smaller than [b], which should be smaller than [c].
  */
-interface IntervalTest<T : Comparable<T>>
+interface IntervalTest<T : Comparable<T>, TSize : Comparable<TSize>>
 {
     val a: T
     val b: T
     val c: T
 
-    val typeOperations: TypeOperations<T>
+    /**
+     * Expected size of the interval between [a] and [b].
+     */
+    val abSize: TSize
 
-    private fun createInterval( start: T, isStartIncluded: Boolean, end: T, isEndIncluded: Boolean ) =
-        Interval( start, isStartIncluded, end, isEndIncluded, typeOperations )
+    val valueOperations: TypeOperations<T>
+    val sizeOperations: TypeOperations<TSize>
 
-    private fun createClosedInterval( start: T, end: T ): Interval<T> = createInterval( start, true, end, true )
-    private fun createOpenInterval( start: T, end: T ): Interval<T> = createInterval( start, false, end, false )
+    fun createInterval( start: T, isStartIncluded: Boolean, end: T, isEndIncluded: Boolean ): Interval<T, TSize>
+
+    private fun createClosedInterval( start: T, end: T ): Interval<T, TSize> = createInterval( start, true, end, true )
+    private fun createOpenInterval( start: T, end: T ): Interval<T, TSize> = createInterval( start, false, end, false )
 
     /**
      * Create a closed, open, and both half-open intervals using [start] and [end].
      */
-    private fun createAllInclusionTypeIntervals( start: T, end: T ): List<Interval<T>> = listOf(
+    private fun createAllInclusionTypeIntervals( start: T, end: T ): List<Interval<T, TSize>> = listOf(
         createClosedInterval( start, end ),
         createOpenInterval( start, end ),
         createInterval( start, true, end, false ),
@@ -79,7 +84,6 @@ interface IntervalTest<T : Comparable<T>>
     @Test
     fun size_for_normal_and_reverse_intervals_is_the_same()
     {
-        val abSize = typeOperations.unsafeSubtract( b, a )
         val abIntervals = createAllInclusionTypeIntervals( a, b ) + createAllInclusionTypeIntervals( b, a )
         abIntervals.forEach { assertEquals( abSize, it.size ) }
     }
@@ -87,32 +91,61 @@ interface IntervalTest<T : Comparable<T>>
     @Test
     fun size_for_empty_interval_is_zero()
     {
-        val zero = typeOperations.additiveIdentity
+        val zero = sizeOperations.additiveIdentity
         val emptyInterval = createClosedInterval( a, a )
         assertEquals( zero, emptyInterval.size )
+    }
+
+    @Test
+    fun size_can_be_greater_than_max_value()
+    {
+        val fullRange = createClosedInterval( valueOperations.minValue, valueOperations.maxValue ).size
+        val identity = valueOperations.additiveIdentity
+        val rangeBelowIdentity = createClosedInterval( valueOperations.minValue, identity ).size
+        val rangeAboveIdentity = createClosedInterval( identity, valueOperations.maxValue ).size
+
+        assertEquals(
+            fullRange,
+            sizeOperations.unsafeAdd( rangeBelowIdentity, rangeAboveIdentity )
+        )
     }
 }
 
 
 /**
- * Create an [IntervalTest] for type [T] which creates intervals for testing
- * using [a], which should be smaller than [b], which should be smaller than [c]
+ * Create an [IntervalTest] for [Interval] with type parameters [T] and [TSize] which creates intervals for testing
+ * using [a], which should be smaller than [b], which should be smaller than [c].
  *
- * @throws UnsupportedOperationException if [typeOperations] needs to be specified since no default is supported.
+ * @throws UnsupportedOperationException if [valueOperations] or [sizeOperations] needs to be specified
+ * since no default is supported.
  */
-inline fun <reified T : Comparable<T>> createIntervalTest(
+inline fun <reified T : Comparable<T>, reified TSize : Comparable<TSize>> createIntervalTest(
     a: T,
     b: T,
     c: T,
     /**
+     * Expected size of the interval between [a] and [b].
+     */
+    abSize: TSize,
+    crossinline createInterval: (T, Boolean, T, Boolean) -> Interval<T, TSize>,
+    /**
      * Specify how to access predefined operators of type [T].
      * For basic Kotlin types, this parameter is initialized with a matching default.
      */
-    typeOperations: TypeOperations<T> = getBasicTypeOperationsFor()
-) : IntervalTest<T> = object : IntervalTest<T>
+    valueOperations: TypeOperations<T> = getBasicTypeOperationsFor(),
+    /**
+     * Specify how to access predefined operators of type [TSize].
+     * For basic Kotlin types, this parameter is initialized with a matching default.
+     */
+    sizeOperations: TypeOperations<TSize> = getBasicTypeOperationsFor(),
+) : IntervalTest<T, TSize> = object : IntervalTest<T, TSize>
 {
     override val a: T = a
     override val b: T = b
     override val c: T = c
-    override val typeOperations: TypeOperations<T> = typeOperations
+    override val abSize: TSize = abSize
+    override val valueOperations: TypeOperations<T> = valueOperations
+    override val sizeOperations: TypeOperations<TSize> = sizeOperations
+    override fun createInterval( start: T, isStartIncluded: Boolean, end: T, isEndIncluded: Boolean ) =
+        createInterval( start, isStartIncluded, end, isEndIncluded )
 }
