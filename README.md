@@ -34,6 +34,7 @@ The following interval types are included by default:
 |  `IntInterval`   |    `Int`     |       `UInt`        |
 |  `LongInterval`  |    `Long`    |       `ULong`       |
 | `FloatInterval`  |   `Float`    |      `Double`       |
+| `DoubleInterval` |   `Double`   |      `Double`       |
 | `UByteInterval`  |   `UByte`    |       `UByte`       |
 | `UShortInterval` |   `UShort`   |      `UShort`       |
 |  `UIntInterval`  |    `UInt`    |       `UInt`        |
