@@ -1,6 +1,8 @@
 # Kotlin Multiplatform Bounded Open/Closed Generic Intervals
 
-[![Build and test](https://github.com/Whathecode/kotlinx.interval/actions/workflows/ci.yml/badge.svg)](https://github.com/Whathecode/kotlinx.interval/actions/workflows/ci.yml)
+[![Publish snapshots](https://github.com/Whathecode/kotlinx.interval/actions/workflows/publish-snapshots.yml/badge.svg)](https://github.com/Whathecode/kotlinx.interval/actions/workflows/ci.yml)
+[![Sonatype Nexus (Snapshots)](https://img.shields.io/nexus/s/io.github.whathecode.kotlinx.interval/kotlinx-interval?server=https%3A%2F%2Fs01.oss.sonatype.org)](https://s01.oss.sonatype.org/content/repositories/snapshots/io/github/whathecode/kotlinx/interval)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.github.whathecode.kotlinx.interval/kotlinx-interval/badge.svg?color=orange)](https://mvnrepository.com/artifact/io.github.whathecode.kotlinx.interval)
 
 Represent closed, open, or half-open, bounded intervals in Kotlin and perform common operations on them.
 _Values_ covered by the interval can be of a different type than _distances_ between those values.

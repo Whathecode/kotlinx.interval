@@ -1,4 +1,4 @@
-package com.github.whathecode.kotlinx.interval
+package io.github.whathecode.kotlinx.interval
 
 
 object ByteIntervalTest : IntervalTest<Byte, UByte>( 0, 5, 10, 5.toUByte(), ByteInterval.Operations )

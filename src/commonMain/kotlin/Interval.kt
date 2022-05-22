@@ -1,4 +1,4 @@
-package com.github.whathecode.kotlinx.interval
+package io.github.whathecode.kotlinx.interval
 
 
 /**
