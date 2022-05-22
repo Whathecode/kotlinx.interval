@@ -1,0 +1,27 @@
+# Publish snapshots to the Sonatype Nexus Repository for each commit which passes tests on develop.
+
+name: Publish snapshots
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up 'publish.properties'
+        run: |
+          echo "${{ secrets.SIGNING_KEY_FILE }}" > signingKey.asc
+          echo "${{ secrets.PUBLISH_PROPERTIES }}" > publish.properties
+
+      - name: Build and test
+        run: ./gradlew check
+
+      - name: Publish snapshot
+        if: success()
+        run: ./gradlew setSnapshotVersion publishToSonatype closeAndReleaseSonatypeStagingRepository

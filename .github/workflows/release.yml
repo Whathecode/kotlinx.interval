@@ -1,0 +1,27 @@
+# Publish release to Maven for every push to master.
+
+name: Release
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up 'publish.properties'
+        run: |
+          echo "${{ secrets.SIGNING_KEY_FILE }}" > signingKey.asc
+          echo "${{ secrets.PUBLISH_PROPERTIES }}" > publish.properties
+
+      - name: Build and test
+        run: ./gradlew check
+
+      - name: Publish to staging repo and release
+        if: success()
+        run: ./gradlew publishToSonatype closeAndReleaseSonatypeStagingRepository

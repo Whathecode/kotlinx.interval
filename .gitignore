@@ -6,3 +6,6 @@ build/
 **/.idea/*
 out/
 *.iml
+
+# Ignore files with secrets
+publish.properties
