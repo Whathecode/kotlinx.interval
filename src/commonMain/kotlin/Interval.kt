@@ -8,19 +8,15 @@ package com.github.whathecode.kotlinx.interval
  *
  * @throws IllegalArgumentException if an open or half-open interval with the same start and end value is specified.
  */
-abstract class Interval<T : Comparable<T>, TSize : Comparable<TSize>>(
+open class Interval<T : Comparable<T>, TSize : Comparable<TSize>>(
     val start: T,
     val isStartIncluded: Boolean,
     val end: T,
     val isEndIncluded: Boolean,
     /**
-     * Provide access to the predefined set of operators of [T].
+     * Provide access to the predefined set of operators of [T] and [TSize] and conversions between them.
      */
-    private val valueOperations: TypeOperations<T>,
-    /**
-     * Provide access to the predefined set of operators of [TSize].
-     */
-    private val sizeOperations: TypeOperations<TSize>
+    private val operations: IntervalTypeOperations<T, TSize>,
 )
 {
     init
@@ -31,10 +27,8 @@ abstract class Interval<T : Comparable<T>, TSize : Comparable<TSize>>(
         }
     }
 
-    /**
-     * Return the distance from [value] to the additive identity (usually "zero") of [T].
-     */
-    protected abstract fun getDistanceTo( value: T ): TSize
+    private val valueOperations = operations.valueOperations
+    private val sizeOperations = operations.sizeOperations
 
 
     /**
@@ -58,8 +52,8 @@ abstract class Interval<T : Comparable<T>, TSize : Comparable<TSize>>(
     val size: TSize get()
     {
         val zero = valueOperations.additiveIdentity
-        val startDistance = getDistanceTo( start )
-        val endDistance = getDistanceTo( end )
+        val startDistance = operations.getDistanceTo( start )
+        val endDistance = operations.getDistanceTo( end )
         val valuesHaveOppositeSign = start <= zero != end <= zero
 
         return if ( valuesHaveOppositeSign )

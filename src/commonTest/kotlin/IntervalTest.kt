@@ -7,22 +7,25 @@ import kotlin.test.*
  * Tests for [Interval] which creates intervals for testing
  * using [a], which should be smaller than [b], which should be smaller than [c].
  */
-interface IntervalTest<T : Comparable<T>, TSize : Comparable<TSize>>
-{
-    val a: T
-    val b: T
-    val c: T
-
+abstract class IntervalTest<T : Comparable<T>, TSize : Comparable<TSize>>(
+    private val a: T,
+    private val b: T,
+    private val c: T,
     /**
      * Expected size of the interval between [a] and [b].
      */
-    val abSize: TSize
+    private val abSize: TSize,
+    /**
+     * Provide access to the predefined set of operators of [T] and [TSize] and conversions between them.
+     */
+    private val operations: IntervalTypeOperations<T, TSize>
+)
+{
+    private val valueOperations = operations.valueOperations
+    private val sizeOperations = operations.sizeOperations
 
-    val valueOperations: TypeOperations<T>
-    val sizeOperations: TypeOperations<TSize>
-
-    fun createInterval( start: T, isStartIncluded: Boolean, end: T, isEndIncluded: Boolean ): Interval<T, TSize>
-
+    private fun createInterval( start: T, isStartIncluded: Boolean, end: T, isEndIncluded: Boolean ) =
+        Interval( start, isStartIncluded, end, isEndIncluded, operations )
     private fun createClosedInterval( start: T, end: T ): Interval<T, TSize> = createInterval( start, true, end, true )
     private fun createOpenInterval( start: T, end: T ): Interval<T, TSize> = createInterval( start, false, end, false )
 
@@ -109,43 +112,4 @@ interface IntervalTest<T : Comparable<T>, TSize : Comparable<TSize>>
             sizeOperations.unsafeAdd( rangeBelowIdentity, rangeAboveIdentity )
         )
     }
-}
-
-
-/**
- * Create an [IntervalTest] for [Interval] with type parameters [T] and [TSize] which creates intervals for testing
- * using [a], which should be smaller than [b], which should be smaller than [c].
- *
- * @throws UnsupportedOperationException if [valueOperations] or [sizeOperations] needs to be specified
- * since no default is supported.
- */
-inline fun <reified T : Comparable<T>, reified TSize : Comparable<TSize>> createIntervalTest(
-    a: T,
-    b: T,
-    c: T,
-    /**
-     * Expected size of the interval between [a] and [b].
-     */
-    abSize: TSize,
-    crossinline createInterval: (T, Boolean, T, Boolean) -> Interval<T, TSize>,
-    /**
-     * Specify how to access predefined operators of type [T].
-     * For basic Kotlin types, this parameter is initialized with a matching default.
-     */
-    valueOperations: TypeOperations<T> = getBasicTypeOperationsFor(),
-    /**
-     * Specify how to access predefined operators of type [TSize].
-     * For basic Kotlin types, this parameter is initialized with a matching default.
-     */
-    sizeOperations: TypeOperations<TSize> = getBasicTypeOperationsFor(),
-) : IntervalTest<T, TSize> = object : IntervalTest<T, TSize>
-{
-    override val a: T = a
-    override val b: T = b
-    override val c: T = c
-    override val abSize: TSize = abSize
-    override val valueOperations: TypeOperations<T> = valueOperations
-    override val sizeOperations: TypeOperations<TSize> = sizeOperations
-    override fun createInterval( start: T, isStartIncluded: Boolean, end: T, isEndIncluded: Boolean ) =
-        createInterval( start, isStartIncluded, end, isEndIncluded )
 }

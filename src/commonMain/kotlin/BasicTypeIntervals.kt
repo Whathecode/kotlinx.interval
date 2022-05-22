@@ -8,11 +8,16 @@ import kotlin.math.absoluteValue
  * The interval can be closed, open, or half-open, as determined by [isStartIncluded] and [isEndIncluded].
  */
 class ByteInterval( start: Byte, isStartIncluded: Boolean, end: Byte, isEndIncluded: Boolean )
-    : Interval<Byte, UByte>( start, isStartIncluded, end, isEndIncluded, ByteOperations, UByteOperations )
+    : Interval<Byte, UByte>( start, isStartIncluded, end, isEndIncluded, Operations )
 {
-    override fun getDistanceTo( value: Byte ): UByte =
-        if ( value < 0 ) (0 - value).toUByte()
-        else value.toUByte()
+    companion object
+    {
+        internal val Operations = createIntervalTypeOperations<Byte, UByte>()
+            {
+                if ( it < 0 ) (0 - it).toUByte()
+                else it.toUByte()
+            }
+    }
 }
 
 /**
@@ -20,11 +25,16 @@ class ByteInterval( start: Byte, isStartIncluded: Boolean, end: Byte, isEndInclu
  * The interval can be closed, open, or half-open, as determined by [isStartIncluded] and [isEndIncluded].
  */
 class ShortInterval( start: Short, isStartIncluded: Boolean, end: Short, isEndIncluded: Boolean )
-    : Interval<Short, UShort>( start, isStartIncluded, end, isEndIncluded, ShortOperations, UShortOperations )
+    : Interval<Short, UShort>( start, isStartIncluded, end, isEndIncluded, Operations )
 {
-    override fun getDistanceTo( value: Short ): UShort =
-        if ( value < 0 ) (0 - value).toUShort()
-        else value.toUShort()
+    companion object
+    {
+        internal val Operations = createIntervalTypeOperations<Short, UShort>()
+            {
+                if ( it < 0 ) (0 - it).toUShort()
+                else it.toUShort()
+            }
+    }
 }
 
 /**
@@ -32,11 +42,16 @@ class ShortInterval( start: Short, isStartIncluded: Boolean, end: Short, isEndIn
  * The interval can be closed, open, or half-open, as determined by [isStartIncluded] and [isEndIncluded].
  */
 class IntInterval( start: Int, isStartIncluded: Boolean, end: Int, isEndIncluded: Boolean )
-    : Interval<Int, UInt>( start, isStartIncluded, end, isEndIncluded, IntOperations, UIntOperations )
+    : Interval<Int, UInt>( start, isStartIncluded, end, isEndIncluded, Operations )
 {
-    override fun getDistanceTo( value: Int ): UInt =
-        if ( value < 0 ) (0 - value).toUInt()
-        else value.toUInt()
+    companion object
+    {
+        internal val Operations = createIntervalTypeOperations<Int, UInt>()
+            {
+                if ( it < 0 ) (0 - it).toUInt()
+                else it.toUInt()
+            }
+    }
 }
 
 /**
@@ -44,11 +59,16 @@ class IntInterval( start: Int, isStartIncluded: Boolean, end: Int, isEndIncluded
  * The interval can be closed, open, or half-open, as determined by [isStartIncluded] and [isEndIncluded].
  */
 class LongInterval( start: Long, isStartIncluded: Boolean, end: Long, isEndIncluded: Boolean )
-    : Interval<Long, ULong>( start, isStartIncluded, end, isEndIncluded, LongOperations, ULongOperations )
+    : Interval<Long, ULong>( start, isStartIncluded, end, isEndIncluded, Operations )
 {
-    override fun getDistanceTo( value: Long ): ULong =
-        if ( value < 0 ) (0 - value).toULong()
-        else value.toULong()
+    companion object
+    {
+        internal val Operations = createIntervalTypeOperations<Long, ULong>()
+            {
+                if ( it < 0 ) (0 - it).toULong()
+                else it.toULong()
+            }
+    }
 }
 
 /**
@@ -56,9 +76,12 @@ class LongInterval( start: Long, isStartIncluded: Boolean, end: Long, isEndInclu
  * The interval can be closed, open, or half-open, as determined by [isStartIncluded] and [isEndIncluded].
  */
 class FloatInterval( start: Float, isStartIncluded: Boolean, end: Float, isEndIncluded: Boolean )
-    : Interval<Float, Double>( start, isStartIncluded, end, isEndIncluded, FloatOperations, DoubleOperations )
+    : Interval<Float, Double>( start, isStartIncluded, end, isEndIncluded, Operations )
 {
-    override fun getDistanceTo( value: Float ): Double = value.absoluteValue.toDouble()
+    companion object
+    {
+        internal val Operations = createIntervalTypeOperations<Float, Double> { it.absoluteValue.toDouble() }
+    }
 }
 
 /**
@@ -68,9 +91,12 @@ class FloatInterval( start: Float, isStartIncluded: Boolean, end: Float, isEndIn
  * The [size] of [Double] intervals which exceed [Double.MAX_VALUE] will be [Double.POSITIVE_INFINITY].
  */
 class DoubleInterval( start: Double, isStartIncluded: Boolean, end: Double, isEndIncluded: Boolean )
-    : Interval<Double, Double>( start, isStartIncluded, end, isEndIncluded, DoubleOperations, DoubleOperations )
+    : Interval<Double, Double>( start, isStartIncluded, end, isEndIncluded, Operations )
 {
-    override fun getDistanceTo( value: Double ): Double = value.absoluteValue
+    companion object
+    {
+        internal val Operations = createIntervalTypeOperations<Double, Double> { it.absoluteValue }
+    }
 }
 
 /**
@@ -78,9 +104,12 @@ class DoubleInterval( start: Double, isStartIncluded: Boolean, end: Double, isEn
  * The interval can be closed, open, or half-open, as determined by [isStartIncluded] and [isEndIncluded].
  */
 class UByteInterval( start: UByte, isStartIncluded: Boolean, end: UByte, isEndIncluded: Boolean )
-    : Interval<UByte, UByte>( start, isStartIncluded, end, isEndIncluded, UByteOperations, UByteOperations )
+    : Interval<UByte, UByte>( start, isStartIncluded, end, isEndIncluded, Operations )
 {
-    override fun getDistanceTo( value: UByte ): UByte = value
+    companion object
+    {
+        internal val Operations = createIntervalTypeOperations<UByte, UByte> { it }
+    }
 }
 
 /**
@@ -88,9 +117,12 @@ class UByteInterval( start: UByte, isStartIncluded: Boolean, end: UByte, isEndIn
  * The interval can be closed, open, or half-open, as determined by [isStartIncluded] and [isEndIncluded].
  */
 class UShortInterval( start: UShort, isStartIncluded: Boolean, end: UShort, isEndIncluded: Boolean )
-    : Interval<UShort, UShort>( start, isStartIncluded, end, isEndIncluded, UShortOperations, UShortOperations )
+    : Interval<UShort, UShort>( start, isStartIncluded, end, isEndIncluded, Operations )
 {
-    override fun getDistanceTo( value: UShort ): UShort = value
+    companion object
+    {
+        internal val Operations = createIntervalTypeOperations<UShort, UShort> { it }
+    }
 }
 
 /**
@@ -98,9 +130,12 @@ class UShortInterval( start: UShort, isStartIncluded: Boolean, end: UShort, isEn
  * The interval can be closed, open, or half-open, as determined by [isStartIncluded] and [isEndIncluded].
  */
 class UIntInterval( start: UInt, isStartIncluded: Boolean, end: UInt, isEndIncluded: Boolean )
-    : Interval<UInt, UInt>( start, isStartIncluded, end, isEndIncluded, UIntOperations, UIntOperations )
+    : Interval<UInt, UInt>( start, isStartIncluded, end, isEndIncluded, Operations )
 {
-    override fun getDistanceTo( value: UInt ): UInt = value
+    companion object
+    {
+        internal val Operations = createIntervalTypeOperations<UInt, UInt> { it }
+    }
 }
 
 /**
@@ -108,9 +143,12 @@ class UIntInterval( start: UInt, isStartIncluded: Boolean, end: UInt, isEndInclu
  * The interval can be closed, open, or half-open, as determined by [isStartIncluded] and [isEndIncluded].
  */
 class ULongInterval( start: ULong, isStartIncluded: Boolean, end: ULong, isEndIncluded: Boolean )
-    : Interval<ULong, ULong>( start, isStartIncluded, end, isEndIncluded, ULongOperations, ULongOperations )
+    : Interval<ULong, ULong>( start, isStartIncluded, end, isEndIncluded, Operations )
 {
-    override fun getDistanceTo( value: ULong ): ULong = value
+    companion object
+    {
+        internal val Operations = createIntervalTypeOperations<ULong, ULong> { it }
+    }
 }
 
 /**
@@ -118,7 +156,10 @@ class ULongInterval( start: ULong, isStartIncluded: Boolean, end: ULong, isEndIn
  * The interval can be closed, open, or half-open, as determined by [isStartIncluded] and [isEndIncluded].
  */
 class CharInterval( start: Char, isStartIncluded: Boolean, end: Char, isEndIncluded: Boolean )
-    : Interval<Char, UShort>( start, isStartIncluded, end, isEndIncluded, CharOperations, UShortOperations )
+    : Interval<Char, UShort>( start, isStartIncluded, end, isEndIncluded, Operations )
 {
-    override fun getDistanceTo( value: Char ): UShort = value.code.toUShort()
+    companion object
+    {
+        internal val Operations = createIntervalTypeOperations<Char, UShort> { it.code.toUShort() }
+    }
 }
