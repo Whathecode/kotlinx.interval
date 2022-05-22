@@ -65,7 +65,7 @@ class FloatInterval( start: Float, isStartIncluded: Boolean, end: Float, isEndIn
  * An [Interval] representing the set of all [Double] values lying between a provided [start] and [end] value.
  * The interval can be closed, open, or half-open, as determined by [isStartIncluded] and [isEndIncluded].
  *
- * TODO: Double can't safely represent all sizes for Double intervals.
+ * The [size] of [Double] intervals which exceed [Double.MAX_VALUE] will be [Double.POSITIVE_INFINITY].
  */
 class DoubleInterval( start: Double, isStartIncluded: Boolean, end: Double, isEndIncluded: Boolean )
     : Interval<Double, Double>( start, isStartIncluded, end, isEndIncluded, DoubleOperations, DoubleOperations )
