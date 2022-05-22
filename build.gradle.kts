@@ -100,6 +100,8 @@ publishing {
             it.artifact(javadocJar)
         }
         it.pom {
+            name.set("kotlinx.interval")
+            description.set("Kotlin multiplatform bounded open/closed generic intervals.")
             url.set("https://github.com/Whathecode/kotlinx.interval")
             licenses {
                 license {
