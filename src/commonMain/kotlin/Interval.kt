@@ -44,7 +44,7 @@ open class Interval<T : Comparable<T>, TSize : Comparable<TSize>>(
     /**
      * Determines whether the [start] of the interval is greater than the [end].
      */
-    inline val isReversed: Boolean get() =  start > end
+    inline val isReversed: Boolean get() = start > end
 
     /**
      * The absolute difference between [start] and [end].
@@ -65,6 +65,25 @@ open class Interval<T : Comparable<T>, TSize : Comparable<TSize>>(
             if ( startDistance < endDistance ) sizeOperations.unsafeSubtract( endDistance, startDistance )
             else sizeOperations.unsafeSubtract( startDistance, endDistance )
         }
+    }
+
+
+    /**
+     * Checks whether [value] lies within this interval.
+     */
+    operator fun contains( value: T ): Boolean
+    {
+        class Endpoint( val value: T, val isIncluded: Boolean )
+
+        val a = Endpoint( start, isStartIncluded )
+        val b = Endpoint( end, isEndIncluded )
+        val (smallest, greatest) = if ( isReversed ) b to a else a to b
+
+        val smallestComp = value.compareTo( smallest.value )
+        val greatestComp = value.compareTo( greatest.value )
+
+        return ( smallestComp > 0 || (smallestComp == 0 && smallest.isIncluded) )
+            && ( greatestComp < 0 || (greatestComp == 0 && greatest.isIncluded) )
     }
 
     /**

@@ -16,6 +16,8 @@ val interval = IntInterval(
     end = 10,
     isEndIncluded = false
 )
+val areIncluded = 0 in interval && 5 in interval // true
+val areExcluded = 10 !in interval // true
 val size: UInt = interval.size // 10
 ```
 
