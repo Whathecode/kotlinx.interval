@@ -21,6 +21,14 @@ class ByteInterval( start: Byte, isStartIncluded: Boolean, end: Byte, isEndInclu
 }
 
 /**
+ * Create a [ByteInterval] representing the set of all [Byte] values lying between [start] and [end].
+ * To exclude endpoints, set [isStartIncluded] or [isEndIncluded] to false; a closed interval is created by default.
+ */
+fun interval( start: Byte, end: Byte, isStartIncluded: Boolean = true, isEndIncluded: Boolean = true ) =
+    ByteInterval( start, isStartIncluded, end, isEndIncluded )
+
+
+/**
  * An [Interval] representing the set of all [Short] values lying between a provided [start] and [end] value.
  * The interval can be closed, open, or half-open, as determined by [isStartIncluded] and [isEndIncluded].
  */
@@ -36,6 +44,14 @@ class ShortInterval( start: Short, isStartIncluded: Boolean, end: Short, isEndIn
             }
     }
 }
+
+/**
+ * Create a [ShortInterval] representing the set of all [Short] values lying between [start] and [end].
+ * To exclude endpoints, set [isStartIncluded] or [isEndIncluded] to false; a closed interval is created by default.
+ */
+fun interval( start: Short, end: Short, isStartIncluded: Boolean = true, isEndIncluded: Boolean = true ) =
+    ShortInterval( start, isStartIncluded, end, isEndIncluded )
+
 
 /**
  * An [Interval] representing the set of all [Int] values lying between a provided [start] and [end] value.
@@ -55,6 +71,14 @@ class IntInterval( start: Int, isStartIncluded: Boolean, end: Int, isEndIncluded
 }
 
 /**
+ * Create a [IntInterval] representing the set of all [Int] values lying between [start] and [end].
+ * To exclude endpoints, set [isStartIncluded] or [isEndIncluded] to false; a closed interval is created by default.
+ */
+fun interval( start: Int, end: Int, isStartIncluded: Boolean = true, isEndIncluded: Boolean = true ) =
+    IntInterval( start, isStartIncluded, end, isEndIncluded )
+
+
+/**
  * An [Interval] representing the set of all [Long] values lying between a provided [start] and [end] value.
  * The interval can be closed, open, or half-open, as determined by [isStartIncluded] and [isEndIncluded].
  */
@@ -72,6 +96,14 @@ class LongInterval( start: Long, isStartIncluded: Boolean, end: Long, isEndInclu
 }
 
 /**
+ * Create a [LongInterval] representing the set of all [Long] values lying between [start] and [end].
+ * To exclude endpoints, set [isStartIncluded] or [isEndIncluded] to false; a closed interval is created by default.
+ */
+fun interval( start: Long, end: Long, isStartIncluded: Boolean = true, isEndIncluded: Boolean = true ) =
+    LongInterval( start, isStartIncluded, end, isEndIncluded )
+
+
+/**
  * An [Interval] representing the set of all [Float] values lying between a provided [start] and [end] value.
  * The interval can be closed, open, or half-open, as determined by [isStartIncluded] and [isEndIncluded].
  */
@@ -83,6 +115,14 @@ class FloatInterval( start: Float, isStartIncluded: Boolean, end: Float, isEndIn
         internal val Operations = createIntervalTypeOperations<Float, Double> { it.absoluteValue.toDouble() }
     }
 }
+
+/**
+ * Create a [FloatInterval] representing the set of all [Float] values lying between [start] and [end].
+ * To exclude endpoints, set [isStartIncluded] or [isEndIncluded] to false; a closed interval is created by default.
+ */
+fun interval( start: Float, end: Float, isStartIncluded: Boolean = true, isEndIncluded: Boolean = true ) =
+    FloatInterval( start, isStartIncluded, end, isEndIncluded )
+
 
 /**
  * An [Interval] representing the set of all [Double] values lying between a provided [start] and [end] value.
@@ -100,6 +140,14 @@ class DoubleInterval( start: Double, isStartIncluded: Boolean, end: Double, isEn
 }
 
 /**
+ * Create a [DoubleInterval] representing the set of all [Double] values lying between [start] and [end].
+ * To exclude endpoints, set [isStartIncluded] or [isEndIncluded] to false; a closed interval is created by default.
+ */
+fun interval( start: Double, end: Double, isStartIncluded: Boolean = true, isEndIncluded: Boolean = true ) =
+    DoubleInterval( start, isStartIncluded, end, isEndIncluded )
+
+
+/**
  * An [Interval] representing the set of all [UByte] values lying between a provided [start] and [end] value.
  * The interval can be closed, open, or half-open, as determined by [isStartIncluded] and [isEndIncluded].
  */
@@ -111,6 +159,14 @@ class UByteInterval( start: UByte, isStartIncluded: Boolean, end: UByte, isEndIn
         internal val Operations = createIntervalTypeOperations<UByte, UByte> { it }
     }
 }
+
+/**
+ * Create a [UByteInterval] representing the set of all [UByte] values lying between [start] and [end].
+ * To exclude endpoints, set [isStartIncluded] or [isEndIncluded] to false; a closed interval is created by default.
+ */
+fun interval( start: UByte, end: UByte, isStartIncluded: Boolean = true, isEndIncluded: Boolean = true ) =
+    UByteInterval( start, isStartIncluded, end, isEndIncluded )
+
 
 /**
  * An [Interval] representing the set of all [UShort] values lying between a provided [start] and [end] value.
@@ -126,6 +182,14 @@ class UShortInterval( start: UShort, isStartIncluded: Boolean, end: UShort, isEn
 }
 
 /**
+ * Create a [UShortInterval] representing the set of all [UShort] values lying between [start] and [end].
+ * To exclude endpoints, set [isStartIncluded] or [isEndIncluded] to false; a closed interval is created by default.
+ */
+fun interval( start: UShort, end: UShort, isStartIncluded: Boolean = true, isEndIncluded: Boolean = true ) =
+    UShortInterval( start, isStartIncluded, end, isEndIncluded )
+
+
+/**
  * An [Interval] representing the set of all [UInt] values lying between a provided [start] and [end] value.
  * The interval can be closed, open, or half-open, as determined by [isStartIncluded] and [isEndIncluded].
  */
@@ -137,6 +201,14 @@ class UIntInterval( start: UInt, isStartIncluded: Boolean, end: UInt, isEndInclu
         internal val Operations = createIntervalTypeOperations<UInt, UInt> { it }
     }
 }
+
+/**
+ * Create a [UIntInterval] representing the set of all [UInt] values lying between [start] and [end].
+ * To exclude endpoints, set [isStartIncluded] or [isEndIncluded] to false; a closed interval is created by default.
+ */
+fun interval( start: UInt, end: UInt, isStartIncluded: Boolean = true, isEndIncluded: Boolean = true ) =
+    UIntInterval( start, isStartIncluded, end, isEndIncluded )
+
 
 /**
  * An [Interval] representing the set of all [ULong] values lying between a provided [start] and [end] value.
@@ -152,6 +224,14 @@ class ULongInterval( start: ULong, isStartIncluded: Boolean, end: ULong, isEndIn
 }
 
 /**
+ * Create a [ULongInterval] representing the set of all [ULong] values lying between [start] and [end].
+ * To exclude endpoints, set [isStartIncluded] or [isEndIncluded] to false; a closed interval is created by default.
+ */
+fun interval( start: ULong, end: ULong, isStartIncluded: Boolean = true, isEndIncluded: Boolean = true ) =
+    ULongInterval( start, isStartIncluded, end, isEndIncluded )
+
+
+/**
  * An [Interval] representing the set of all [Char] values lying between a provided [start] and [end] value.
  * The interval can be closed, open, or half-open, as determined by [isStartIncluded] and [isEndIncluded].
  */
@@ -163,3 +243,10 @@ class CharInterval( start: Char, isStartIncluded: Boolean, end: Char, isEndInclu
         internal val Operations = createIntervalTypeOperations<Char, UShort> { it.code.toUShort() }
     }
 }
+
+/**
+ * Create a [CharInterval] representing the set of all [Char] values lying between [start] and [end].
+ * To exclude endpoints, set [isStartIncluded] or [isEndIncluded] to false; a closed interval is created by default.
+ */
+fun interval( start: Char, end: Char, isStartIncluded: Boolean = true, isEndIncluded: Boolean = true ) =
+    CharInterval( start, isStartIncluded, end, isEndIncluded )
