@@ -112,4 +112,28 @@ abstract class IntervalTest<T : Comparable<T>, TSize : Comparable<TSize>>(
             sizeOperations.unsafeAdd( rangeBelowIdentity, rangeAboveIdentity )
         )
     }
+
+    @Test
+    fun contains_for_values_within_interval()
+    {
+        val acIntervals = createAllInclusionTypeIntervals( a, c ) + createAllInclusionTypeIntervals( c, a )
+        acIntervals.forEach { assertTrue( b in it ) }
+    }
+
+    @Test
+    fun contains_for_values_on_endpoints_of_half_open_intervals()
+    {
+        val onlyAIncluded = listOf(
+            createInterval( a, true, b, false ),
+            createInterval( b, false, a, true )
+        )
+        onlyAIncluded.forEach { assertTrue(a in it && b !in it ) }
+    }
+
+    @Test
+    fun contains_for_values_on_endpoints_of_open_intervals()
+    {
+        val openIntervals = listOf( createOpenInterval( a, b ), createOpenInterval( b, a ) )
+        openIntervals.forEach { assertTrue( a !in it && b !in it ) }
+    }
 }

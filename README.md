@@ -10,12 +10,9 @@ _Values_ covered by the interval can be of a different type than _distances_ bet
 For example, `IntInterval` has `Int` values and `UInt` distances:
 
 ```kotlin
-val interval = IntInterval(
-    start = 0,
-    isStartIncluded = true,
-    end = 10,
-    isEndIncluded = false
-)
+val interval: IntInterval = interval( 0, 10, isEndIncluded = false )
+val areIncluded = 0 in interval && 5 in interval // true
+val areExcluded = 10 !in interval && 15 !in interval // true
 val size: UInt = interval.size // 10
 ```
 
