@@ -10,3 +10,13 @@ publishing {
         }
     }
 }
+
+kotlin {
+    sourceSets {
+        commonTest {
+            dependencies {
+                implementation(project(":kotlinx.interval.test"))
+            }
+        }
+    }
+}

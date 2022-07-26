@@ -1,5 +1,6 @@
-package io.github.whathecode.kotlinx.interval
+package io.github.whathecode.kotlinx.interval.test
 
+import io.github.whathecode.kotlinx.interval.TypeOperations
 import kotlin.test.*
 
 
