@@ -126,9 +126,16 @@ signing {
     }
 }
 val setSnapshotVersion by tasks.creating {
-    doFirst {
+    fun toSnapshotVersion(version: String): String
+    {
         val versionSplit = version.toString().split("-")
-        val snapshotVersion = "${versionSplit[0]}-SNAPSHOT"
-        version = snapshotVersion
+        return "${versionSplit[0]}-SNAPSHOT"
+    }
+
+    rootProject.version = toSnapshotVersion(rootProject.version.toString())
+    doFirst {
+        version = toSnapshotVersion(version.toString())
     }
 }
+
+

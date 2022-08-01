@@ -1,3 +1,8 @@
+val globalGroup: String by rootProject.extra
+val globalVersion: String by rootProject.extra
+group = globalGroup
+version = globalVersion
+
 plugins {
     id( "interval.library-conventions" )
 }

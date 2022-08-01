@@ -1,3 +1,6 @@
+val globalGroup by extra { "io.github.whathecode.kotlinx.interval" }
+val globalVersion by extra { "1.0.0-alpha.3" }
+
 plugins {
     id("io.github.gradle-nexus.publish-plugin") version "1.1.0"
 }
@@ -15,6 +18,8 @@ val publishPropertiesFile = File("publish.properties")
 if (publishPropertiesFile.exists()) {
     publishProperties.load(java.io.FileInputStream(publishPropertiesFile))
 }
+group = globalGroup
+version = globalVersion
 nexusPublishing {
     repositories {
         sonatype {
