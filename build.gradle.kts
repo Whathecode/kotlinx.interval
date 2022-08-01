@@ -15,6 +15,8 @@ val publishPropertiesFile = File("publish.properties")
 if (publishPropertiesFile.exists()) {
     publishProperties.load(java.io.FileInputStream(publishPropertiesFile))
 }
+group = "io.github.whathecode.kotlinx.interval"
+version = "1.0.0-SNAPSHOT"
 nexusPublishing {
     repositories {
         sonatype {
