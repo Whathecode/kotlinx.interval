@@ -17,14 +17,21 @@ val size: UInt = interval.size // 10
 ```
 
 This protects against overflows (e.g. if `size > Int.MAX_VALUE`) but also offers better semantics.
-For example, you can create intervals for [kotlinx datetime](https://github.com/Kotlin/kotlinx-datetime) `Instant` values which are a `Duration` apart.
+For example, this library supports [kotlinx datetime](https://github.com/Kotlin/kotlinx-datetime) `Instant` values which are a `Duration` apart.
+
+```kotlin
+val now = Clock.System.now()
+val interval: InstantInterval = interval( now, now + 100.seconds )
+val areIncluded = now + 50.seconds in interval // true
+val size: Duration = interval.size // 100 seconds
+```
 
 ## Interval Types
 
 This library includes a generic base class `Interval<T, TSize>` which can be used to create intervals for any type.
 To achieve this, it directs type operations to `IntervalTypeOperations` which the constructor takes as a parameter.
 
-The following interval types are included by default:
+The following interval types are included in `io.github.whathecode.kotlinx.interval:kotlinx.interval` on Maven:
 
 |       Type       | Values (`T`) | Distances (`TSize`) |
 |:----------------:|:------------:|:-------------------:|
@@ -39,3 +46,7 @@ The following interval types are included by default:
 |  `UIntInterval`  |    `UInt`    |       `UInt`        |
 | `ULongInterval`  |   `ULong`    |       `ULong`       |
 |  `CharInterval`  |    `Char`    |      `UShort`       |
+
+### Date/time intervals
+Date/time intervals are implemented as `InstantInterval` using the [kotlinx datetime](https://github.com/Kotlin/kotlinx-datetime) library.
+Since you may not always want to pull in this dependency, this class is published separately in `io.github.whathecode.kotlinx.interval:kotlinx.interval.datetime`.

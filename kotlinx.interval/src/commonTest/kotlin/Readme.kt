@@ -6,7 +6,7 @@ import kotlin.test.*
 class Readme
 {
     @Test
-    fun introduction_example()
+    fun introduction_int_interval_example()
     {
         val interval: IntInterval = interval( 0, 10, isEndIncluded = false )
         val areIncluded = 0 in interval && 5 in interval // true
