@@ -31,7 +31,7 @@ val size: Duration = interval.size // 100 seconds
 This library includes a generic base class `Interval<T, TSize>` which can be used to create intervals for any type.
 To achieve this, it directs type operations to `IntervalTypeOperations` which the constructor takes as a parameter.
 
-The following interval types are included in `io.github.whathecode.kotlinx.interval:kotlinx.interval` on Maven:
+The following interval types are included in `io.github.whathecode.kotlinx.interval:kotlinx-interval` on Maven:
 
 |       Type       | Values (`T`) | Distances (`TSize`) |
 |:----------------:|:------------:|:-------------------:|
@@ -49,4 +49,4 @@ The following interval types are included in `io.github.whathecode.kotlinx.inter
 
 ### Date/time intervals
 Date/time intervals are implemented as `InstantInterval` using the [kotlinx datetime](https://github.com/Kotlin/kotlinx-datetime) library.
-Since you may not always want to pull in this dependency, this class is published separately in `io.github.whathecode.kotlinx.interval:kotlinx.interval.datetime`.
+Since you may not always want to pull in this dependency, this class is published separately in `io.github.whathecode.kotlinx.interval:kotlinx-interval-datetime`.

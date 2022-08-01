@@ -15,9 +15,6 @@ repositories {
     mavenCentral()
 }
 
-group = "io.github.whathecode.kotlinx.interval"
-version = "1.0.0-alpha.3"
-
 
 kotlin {
     jvm {
@@ -123,12 +120,5 @@ signing {
         val signingPassword = publishProperties["signing.password"] as? String
         useInMemoryPgpKeys(signingKey, signingPassword)
         sign(publishing.publications)
-    }
-}
-val setSnapshotVersion by tasks.creating {
-    doFirst {
-        val versionSplit = version.toString().split("-")
-        val snapshotVersion = "${versionSplit[0]}-SNAPSHOT"
-        version = snapshotVersion
     }
 }

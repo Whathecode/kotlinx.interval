@@ -1,3 +1,6 @@
+group = rootProject.group
+version = rootProject.version
+
 plugins {
     id( "interval.library-conventions" )
 }
@@ -5,7 +8,7 @@ plugins {
 publishing {
     publications.filterIsInstance<MavenPublication>().forEach {
         it.pom {
-            name.set("kotlinx.interval.test")
+            name.set("kotlinx-interval-test")
             description.set("Base test classes for extensions of kotlinx.interval.")
         }
     }
@@ -15,7 +18,7 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                api(project(":kotlinx.interval"))
+                api(project(":kotlinx-interval"))
                 implementation(kotlin("test"))
             }
         }
