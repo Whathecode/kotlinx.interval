@@ -1,5 +1,7 @@
 package io.github.whathecode.kotlinx.interval
 
+import io.github.whathecode.kotlinx.interval.test.IntervalTest
+
 
 object ByteIntervalTest : IntervalTest<Byte, UByte>( 0, 5, 10, 5.toUByte(), ByteInterval.Operations )
 object ShortIntervalTest : IntervalTest<Short, UShort>( 0, 5, 10, 5.toUShort(), ShortInterval.Operations )
