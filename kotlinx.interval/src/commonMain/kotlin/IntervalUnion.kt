@@ -20,14 +20,13 @@ internal class MutableIntervalUnion<T : Comparable<T>, TSize : Comparable<TSize>
 
     fun add( interval: Interval<T, TSize> )
     {
-        require( !interval.isReversed ) { "The interval is reversed. Normalized form is required." }
+        require( !interval.isReversed )
+            { "The interval is reversed. Normalized form is required." }
         require( intervals.all { it.start < interval.start } )
             { "The interval lies before a previously added interval." }
         val last = intervals.lastOrNull()
-        require(
-            last == null ||
-            (interval.start > last.end || interval.start == last.end && interval.isStartIncluded != last.isEndIncluded)
-        ) { "The interval overlaps with a previously added interval." }
+        require( last == null || !interval.intersects( last ) )
+            { "The interval overlaps with a previously added interval." }
 
         intervals.add( interval )
     }

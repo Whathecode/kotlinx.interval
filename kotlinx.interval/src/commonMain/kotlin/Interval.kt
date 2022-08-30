@@ -87,6 +87,26 @@ open class Interval<T : Comparable<T>, TSize : Comparable<TSize>>(
     }
 
     /**
+     * Determines whether [interval] has at least one value in common with this interval.
+     */
+    fun intersects( interval: Interval<T, TSize> ): Boolean
+    {
+        fun Interval<T, TSize>.normalize() =
+            if ( isReversed ) Interval( end, isEndIncluded, start, isStartIncluded, operations )
+            else this
+        val interval1 = this.normalize()
+        val interval2 = interval.normalize()
+
+        val rightOfCompare: Int = interval2.start.compareTo( interval1.end )
+        val leftOfCompare: Int = interval2.end.compareTo( interval1.start )
+        val liesRightOf =
+            rightOfCompare > 0 || ( rightOfCompare == 0 && !(interval2.isStartIncluded && interval1.isEndIncluded) )
+        val liesLeftOf =
+            leftOfCompare < 0 || ( leftOfCompare == 0 && !(interval2.isEndIncluded && interval1.isStartIncluded) )
+        return !( liesRightOf || liesLeftOf )
+    }
+
+    /**
      * Determines whether this interval equals [other]'s constructor parameters exactly,
      * i.e., not whether they represent the same set of [T] values, such as matching inverse intervals.
      */
