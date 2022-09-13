@@ -189,14 +189,26 @@ abstract class IntervalTest<T : Comparable<T>, TSize : Comparable<TSize>>(
         assertIntersects( abWithoutB, bcWithB, false )
     }
 
+    @Test
+    fun reverse_succeeds()
+    {
+        val toReverse = createAllInclusionTypeIntervals( a, b )
+        for ( original in toReverse )
+        {
+            val reversed = original.reverse()
+            assertEquals( original.start, reversed.end )
+            assertEquals( original.isStartIncluded, reversed.isEndIncluded )
+            assertEquals( original.end, reversed.start )
+            assertEquals( original.isEndIncluded, reversed.isStartIncluded )
+        }
+    }
+
     private fun assertIntersects( interval1: Interval<T, TSize>, interval2: Interval<T, TSize>, intersects: Boolean )
     {
         assertEquals( intersects, interval1.intersects( interval2 ) )
         assertEquals( intersects, interval2.intersects( interval1 ) )
 
         // Reversing intervals should have no effect on whether they intersect or not.
-        fun Interval<T, TSize>.reverse() =
-            Interval( this.end, this.isEndIncluded, this.start, this.isStartIncluded, operations )
         val interval1Reversed = interval1.reverse()
         val interval2Reversed = interval2.reverse()
 

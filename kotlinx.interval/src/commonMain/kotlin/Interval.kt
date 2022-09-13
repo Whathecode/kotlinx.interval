@@ -91,9 +91,7 @@ open class Interval<T : Comparable<T>, TSize : Comparable<TSize>>(
      */
     fun intersects( interval: Interval<T, TSize> ): Boolean
     {
-        fun Interval<T, TSize>.normalize() =
-            if ( isReversed ) Interval( end, isEndIncluded, start, isStartIncluded, operations )
-            else this
+        fun Interval<T, TSize>.normalize() = if ( isReversed ) reverse() else this
         val interval1 = this.normalize()
         val interval2 = interval.normalize()
 
@@ -105,6 +103,13 @@ open class Interval<T : Comparable<T>, TSize : Comparable<TSize>>(
             leftOfCompare < 0 || ( leftOfCompare == 0 && !(interval2.isEndIncluded && interval1.isStartIncluded) )
         return !( liesRightOf || liesLeftOf )
     }
+
+    /**
+     * Return an interval representing the same set of all [T] values,
+     * but swap [start] and [isStartIncluded] with [end] and [isEndIncluded].
+     */
+    fun reverse(): Interval<T, TSize> =
+        Interval( this.end, this.isEndIncluded, this.start, this.isStartIncluded, operations )
 
     /**
      * Determines whether this interval equals [other]'s constructor parameters exactly,
