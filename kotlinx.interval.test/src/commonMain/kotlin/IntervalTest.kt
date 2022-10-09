@@ -190,6 +190,28 @@ abstract class IntervalTest<T : Comparable<T>, TSize : Comparable<TSize>>(
     }
 
     @Test
+    fun nonReversed_reversed_when_isReversed()
+    {
+        val reversed = createAllInclusionTypeIntervals( b, a )
+        for ( original in reversed )
+        {
+            val normal = original.nonReversed()
+            assertEquals( original.reverse(), normal )
+        }
+    }
+
+    @Test
+    fun nonReversed_unchanged_when_not_isReversed()
+    {
+        val normal = createAllInclusionTypeIntervals( a, b )
+        for ( original in normal )
+        {
+            val unchanged = original.nonReversed()
+            assertEquals( original, unchanged )
+        }
+    }
+
+    @Test
     fun reverse_succeeds()
     {
         val toReverse = createAllInclusionTypeIntervals( a, b )
