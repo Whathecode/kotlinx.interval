@@ -26,6 +26,11 @@ abstract class IntervalTest<T : Comparable<T>, TSize : Comparable<TSize>>(
     private val valueOperations = operations.valueOperations
     private val sizeOperations = operations.sizeOperations
 
+    /**
+     * Value which lies as far beyond [c] as [b] lies beyond [a].
+     */
+    private val d = valueOperations.unsafeAdd( c, valueOperations.unsafeSubtract( b, a ) )
+
     private fun createInterval( start: T, isStartIncluded: Boolean, end: T, isEndIncluded: Boolean ) =
         Interval( start, isStartIncluded, end, isEndIncluded, operations )
     private fun createClosedInterval( start: T, end: T ): Interval<T, TSize> = createInterval( start, true, end, true )
@@ -137,5 +142,105 @@ abstract class IntervalTest<T : Comparable<T>, TSize : Comparable<TSize>>(
     {
         val openIntervals = listOf( createOpenInterval( a, b ), createOpenInterval( b, a ) )
         openIntervals.forEach { assertTrue( a !in it && b !in it ) }
+    }
+
+    @Test
+    fun intersects_for_fully_contained_intervals()
+    {
+        val ad = createClosedInterval( a, d )
+
+        val withinIntervals = createAllInclusionTypeIntervals( b, c )
+        val onEndPointIntervals = createAllInclusionTypeIntervals( a, b ) + createAllInclusionTypeIntervals( c, d )
+        (withinIntervals + onEndPointIntervals).forEach { assertIntersects( ad, it, true ) }
+    }
+
+    @Test
+    fun intersects_for_partial_overlapping_interval()
+    {
+        val acIntervals = createAllInclusionTypeIntervals( a, c )
+        val bdIntervals = createAllInclusionTypeIntervals( b, d )
+
+        for ( ac in acIntervals ) for ( bd in bdIntervals )
+            assertIntersects( ac, bd, true )
+    }
+
+    @Test
+    fun intersects_for_nonoverlapping_intervals()
+    {
+        val abIntervals = createAllInclusionTypeIntervals( a, b )
+        val cdIntervals = createAllInclusionTypeIntervals( c, d )
+
+        for ( ab in abIntervals ) for ( cd in cdIntervals )
+            assertIntersects( ab, cd, false )
+    }
+
+    @Test
+    fun intersects_for_touching_endpoints()
+    {
+        val abWithB = createClosedInterval( a, b )
+        val bcWithB = createClosedInterval( b, c )
+        assertIntersects( abWithB, bcWithB, true )
+
+        val abWithoutB = createOpenInterval( a, b )
+        val bcWithoutB = createOpenInterval( b, c )
+        assertIntersects( abWithoutB, bcWithoutB, false )
+
+        assertIntersects( abWithB, bcWithoutB, false )
+        assertIntersects( abWithoutB, bcWithB, false )
+    }
+
+    @Test
+    fun nonReversed_reversed_when_isReversed()
+    {
+        val reversed = createAllInclusionTypeIntervals( b, a )
+        for ( original in reversed )
+        {
+            val normal = original.nonReversed()
+            assertEquals( original.reverse(), normal )
+        }
+    }
+
+    @Test
+    fun nonReversed_unchanged_when_not_isReversed()
+    {
+        val normal = createAllInclusionTypeIntervals( a, b )
+        for ( original in normal )
+        {
+            val unchanged = original.nonReversed()
+            assertEquals( original, unchanged )
+        }
+    }
+
+    @Test
+    fun reverse_succeeds()
+    {
+        val toReverse = createAllInclusionTypeIntervals( a, b )
+        for ( original in toReverse )
+        {
+            val reversed = original.reverse()
+            assertEquals( original.start, reversed.end )
+            assertEquals( original.isStartIncluded, reversed.isEndIncluded )
+            assertEquals( original.end, reversed.start )
+            assertEquals( original.isEndIncluded, reversed.isStartIncluded )
+        }
+    }
+
+    private fun assertIntersects( interval1: Interval<T, TSize>, interval2: Interval<T, TSize>, intersects: Boolean )
+    {
+        assertEquals( intersects, interval1.intersects( interval2 ) )
+        assertEquals( intersects, interval2.intersects( interval1 ) )
+
+        // Reversing intervals should have no effect on whether they intersect or not.
+        val interval1Reversed = interval1.reverse()
+        val interval2Reversed = interval2.reverse()
+
+        assertEquals( intersects, interval1.intersects( interval2Reversed ) )
+        assertEquals( intersects, interval2Reversed.intersects( interval1 ) )
+
+        assertEquals( intersects, interval1Reversed.intersects( interval2 ) )
+        assertEquals( intersects, interval2.intersects( interval1Reversed ) )
+
+        assertEquals( intersects, interval1Reversed.intersects( interval2Reversed ) )
+        assertEquals( intersects, interval2Reversed.intersects( interval1Reversed ) )
     }
 }
