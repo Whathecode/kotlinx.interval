@@ -87,6 +87,47 @@ open class Interval<T : Comparable<T>, TSize : Comparable<TSize>>(
     }
 
     /**
+     * Return an [IntervalUnion] representing all [T] values in this interval,
+     * excluding all [T] values in the specified [interval].
+     */
+    operator fun minus( interval: Interval<T, TSize> ): IntervalUnion<T, TSize>
+    {
+        val subtract = interval.nonReversed()
+        val `this` = nonReversed()
+
+        val lowerBoundCompare: Int = `this`.start.compareTo( subtract.end )
+        val upperBoundCompare: Int = `this`.end.compareTo( subtract.start )
+        val result = MutableIntervalUnion<T, TSize>()
+
+        // When the interval to subtract lies in front or behind, the current interval is unaffected.
+        if ( lowerBoundCompare > 0 || upperBoundCompare < 0 )
+        {
+            result.add( this )
+            return result
+        }
+
+        // If the interval to subtract starts after the start of this interval, add the remaining lower bound chunk.
+        val startCompare: Int = `this`.start.compareTo( subtract.start )
+        if ( startCompare < 0 || ( startCompare == 0 && `this`.isStartIncluded && !subtract.isStartIncluded ) )
+        {
+            val lowerBoundRemnant =
+                Interval( `this`.start, `this`.isStartIncluded, subtract.start, !subtract.isStartIncluded, operations )
+            result.add( lowerBoundRemnant )
+        }
+
+        // If the interval to subtract ends before the end of this interval, add the remaining upper bound chunk.
+        val endCompare: Int = `this`.end.compareTo( subtract.end )
+        if ( endCompare > 0 || ( endCompare == 0 && `this`.isEndIncluded && !subtract.isEndIncluded ) )
+        {
+            val upperBoundRemnant =
+                Interval( subtract.end, !subtract.isEndIncluded, `this`.end, `this`.isEndIncluded, operations )
+            result.add( upperBoundRemnant )
+        }
+
+        return result
+    }
+
+    /**
      * Determines whether [interval] has at least one value in common with this interval.
      */
     fun intersects( interval: Interval<T, TSize> ): Boolean
