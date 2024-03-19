@@ -21,13 +21,15 @@ kotlin {
         compilations.all {
             kotlinOptions.jvmTarget = "1.8"
         }
-        withJava()
         testRuns["test"].executionTask.configure {
             useJUnitPlatform()
         }
     }
-    js(BOTH) {
-        browser { }
+    js(IR) {
+        browser {
+            useEsModules()
+        }
+        binaries.executable()
     }
     val hostOs = System.getProperty("os.name")
     val isMingwX64 = hostOs.startsWith("Windows")
@@ -83,7 +85,7 @@ publishing {
     repositories {
         maven {
             name = "local"
-            url = uri("$buildDir/repo")
+            url = uri("${layout.buildDirectory}/repo")
         }
     }
     publications.filterIsInstance<MavenPublication>().forEach {
