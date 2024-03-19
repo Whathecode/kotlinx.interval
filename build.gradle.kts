@@ -2,6 +2,11 @@ plugins {
     id("io.github.gradle-nexus.publish-plugin") version "1.1.0"
 }
 
+repositories {
+    mavenCentral()
+    gradlePluginPortal()
+}
+
 // Publish configuration.
 // For signing and publishing to work, a 'publish.properties' file needs to be added to the root containing:
 // The OpenPGP credentials to sign all artifacts:
