@@ -1,3 +1,5 @@
+@file:Suppress( "UNUSED_VARIABLE" )
+
 package io.github.whathecode.kotlinx.interval.datetime
 
 import kotlinx.datetime.Clock
