@@ -73,17 +73,12 @@ open class Interval<T : Comparable<T>, TSize : Comparable<TSize>>(
      */
     operator fun contains( value: T ): Boolean
     {
-        class Endpoint( val value: T, val isIncluded: Boolean )
+        val `this` = nonReversed()
+        val lowerBoundCompare = value.compareTo( `this`.start )
+        val upperBoundCompare = value.compareTo( `this`.end )
 
-        val a = Endpoint( start, isStartIncluded )
-        val b = Endpoint( end, isEndIncluded )
-        val (smallest, greatest) = if ( isReversed ) b to a else a to b
-
-        val smallestComp = value.compareTo( smallest.value )
-        val greatestComp = value.compareTo( greatest.value )
-
-        return ( smallestComp > 0 || (smallestComp == 0 && smallest.isIncluded) )
-            && ( greatestComp < 0 || (greatestComp == 0 && greatest.isIncluded) )
+        return ( lowerBoundCompare > 0 || (lowerBoundCompare == 0 && `this`.isStartIncluded) )
+            && ( upperBoundCompare < 0 || (upperBoundCompare == 0 && `this`.isEndIncluded) )
     }
 
     /**
