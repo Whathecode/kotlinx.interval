@@ -207,7 +207,7 @@ abstract class IntervalTest<T : Comparable<T>, TSize : Comparable<TSize>>(
         val abIntervals = createAllInclusionTypeIntervals( a, b )
 
         for ( ab in abIntervals )
-            assertEquals( emptySet(), (ab - ab).toSet() )
+            assertTrue( (ab - ab).isEmpty() )
     }
 
     @Test
@@ -217,7 +217,7 @@ abstract class IntervalTest<T : Comparable<T>, TSize : Comparable<TSize>>(
         val adIntervals = createAllInclusionTypeIntervals( a, d )
 
         for ( bc in bcIntervals ) for ( ad in adIntervals )
-            assertEquals( emptySet(), (bc - ad).toSet() )
+            assertTrue( (bc - ad).isEmpty() )
     }
 
     @Test

@@ -2,10 +2,16 @@ package io.github.whathecode.kotlinx.interval
 
 
 /**
- * Represents a set of all [T] values contained in a collection of non-overlapping [Interval]s,
- * stored in normalized form and ordered by their start values.
+ * Represents a set of all [T] values contained in a collection of non-overlapping [Interval]s.
+ * If the collection contains no intervals, it represents an empty set.
  */
 sealed interface IntervalUnion<T : Comparable<T>, TSize : Comparable<TSize>> : Iterable<Interval<T, TSize>>
+{
+    /**
+     * Determines whether this is an empty set, i.e., no value of [T] is contained within.
+     */
+    fun isEmpty(): Boolean = none()
+}
 
 
 /**
