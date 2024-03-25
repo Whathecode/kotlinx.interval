@@ -47,6 +47,28 @@ open class Interval<T : Comparable<T>, TSize : Comparable<TSize>>(
     inline val isReversed: Boolean get() = start > end
 
     /**
+     * The largest value which is smaller than or equal to all values in the interval (tight lower bound).
+     * This corresponds to [start] or [end], depending on which value is smallest.
+     */
+    inline val lowerBound: T get() = if (isReversed) end else start
+
+    /**
+     * Determines whether [lowerBound] is included in the interval.
+     */
+    inline val isLowerBoundIncluded: Boolean get() = if (isReversed) isEndIncluded else isStartIncluded
+
+    /**
+     * The smallest value which is larger than or equal to all values in the interval (tight upper bound).
+     * This corresponds to [start] or [end], depending on which value is largest.
+     */
+    inline val upperBound: T get() = if (isReversed) start else end
+
+    /**
+     * Determines whether [upperBound] is included in the interval.
+     */
+    inline val isUpperBoundIncluded: Boolean get() = if (isReversed) isStartIncluded else isEndIncluded
+
+    /**
      * The absolute difference between [start] and [end].
      */
     val size: TSize get()
@@ -73,49 +95,51 @@ open class Interval<T : Comparable<T>, TSize : Comparable<TSize>>(
      */
     operator fun contains( value: T ): Boolean
     {
-        val `this` = nonReversed()
-        val lowerBoundCompare = value.compareTo( `this`.start )
-        val upperBoundCompare = value.compareTo( `this`.end )
+        val lowerCompare = value.compareTo( lowerBound )
+        val upperCompare = value.compareTo( upperBound )
 
-        return ( lowerBoundCompare > 0 || (lowerBoundCompare == 0 && `this`.isStartIncluded) )
-            && ( upperBoundCompare < 0 || (upperBoundCompare == 0 && `this`.isEndIncluded) )
+        return ( lowerCompare > 0 || (lowerCompare == 0 && isLowerBoundIncluded) )
+            && ( upperCompare < 0 || (upperCompare == 0 && isUpperBoundIncluded) )
     }
 
     /**
      * Return an [IntervalUnion] representing all [T] values in this interval,
-     * excluding all [T] values in the specified [interval].
+     * excluding all [T] values in the specified interval [toSubtract].
      */
-    operator fun minus( interval: Interval<T, TSize> ): IntervalUnion<T, TSize>
+    operator fun minus( toSubtract: Interval<T, TSize> ): IntervalUnion<T, TSize>
     {
-        val subtract = interval.nonReversed()
-        val `this` = nonReversed()
-
-        val lowerBoundCompare: Int = `this`.start.compareTo( subtract.end )
-        val upperBoundCompare: Int = `this`.end.compareTo( subtract.start )
+        val leftOfCompare: Int = lowerBound.compareTo( toSubtract.upperBound )
+        val rightOfCompare: Int = upperBound.compareTo( toSubtract.lowerBound )
         val result = MutableIntervalUnion<T, TSize>()
 
         // When the interval to subtract lies in front or behind, the current interval is unaffected.
-        if ( lowerBoundCompare > 0 || upperBoundCompare < 0 )
+        if ( leftOfCompare > 0 || rightOfCompare < 0 )
         {
             result.add( this )
             return result
         }
 
         // If the interval to subtract starts after the start of this interval, add the remaining lower bound chunk.
-        val startCompare: Int = `this`.start.compareTo( subtract.start )
-        if ( startCompare < 0 || ( startCompare == 0 && `this`.isStartIncluded && !subtract.isStartIncluded ) )
+        val startCompare: Int = lowerBound.compareTo( toSubtract.lowerBound )
+        if ( startCompare < 0 || ( startCompare == 0 && isLowerBoundIncluded && !toSubtract.isLowerBoundIncluded ) )
         {
-            val lowerBoundRemnant =
-                Interval( `this`.start, `this`.isStartIncluded, subtract.start, !subtract.isStartIncluded, operations )
+            val lowerBoundRemnant = Interval(
+                lowerBound, isLowerBoundIncluded,
+                toSubtract.lowerBound, !toSubtract.isLowerBoundIncluded,
+                operations
+            )
             result.add( lowerBoundRemnant )
         }
 
         // If the interval to subtract ends before the end of this interval, add the remaining upper bound chunk.
-        val endCompare: Int = `this`.end.compareTo( subtract.end )
-        if ( endCompare > 0 || ( endCompare == 0 && `this`.isEndIncluded && !subtract.isEndIncluded ) )
+        val upperCompare: Int = upperBound.compareTo( toSubtract.upperBound )
+        if ( upperCompare > 0 || ( upperCompare == 0 && isUpperBoundIncluded && !toSubtract.isEndIncluded ) )
         {
-            val upperBoundRemnant =
-                Interval( subtract.end, !subtract.isEndIncluded, `this`.end, `this`.isEndIncluded, operations )
+            val upperBoundRemnant = Interval(
+                toSubtract.upperBound, !toSubtract.isUpperBoundIncluded,
+                upperBound, isUpperBoundIncluded,
+                operations
+            )
             result.add( upperBoundRemnant )
         }
 
@@ -127,16 +151,13 @@ open class Interval<T : Comparable<T>, TSize : Comparable<TSize>>(
      */
     fun intersects( interval: Interval<T, TSize> ): Boolean
     {
-        val interval1 = nonReversed()
-        val interval2 = interval.nonReversed()
-
-        val rightOfCompare: Int = interval2.start.compareTo( interval1.end )
-        val leftOfCompare: Int = interval2.end.compareTo( interval1.start )
-        val liesRightOf =
-            rightOfCompare > 0 || ( rightOfCompare == 0 && !(interval2.isStartIncluded && interval1.isEndIncluded) )
+        val leftOfCompare: Int = interval.upperBound.compareTo( lowerBound )
+        val rightOfCompare: Int = interval.lowerBound.compareTo( upperBound )
         val liesLeftOf =
-            leftOfCompare < 0 || ( leftOfCompare == 0 && !(interval2.isEndIncluded && interval1.isStartIncluded) )
-        return !( liesRightOf || liesLeftOf )
+            leftOfCompare < 0 || ( leftOfCompare == 0 && !(interval.isUpperBoundIncluded && isLowerBoundIncluded) )
+        val liesRightOf =
+            rightOfCompare > 0 || ( rightOfCompare == 0 && !(interval.isLowerBoundIncluded && isUpperBoundIncluded) )
+        return !( liesLeftOf || liesRightOf )
     }
 
     /**

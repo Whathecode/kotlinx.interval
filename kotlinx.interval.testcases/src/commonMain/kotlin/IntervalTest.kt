@@ -92,6 +92,32 @@ abstract class IntervalTest<T : Comparable<T>, TSize : Comparable<TSize>>(
     }
 
     @Test
+    fun lowerBound_and_upperBound()
+    {
+        val notReversed = createAllInclusionTypeIntervals( a, b )
+        notReversed.forEach {
+            assertEquals( a, it.lowerBound )
+            assertEquals( it.isStartIncluded, it.isLowerBoundIncluded )
+            assertEquals( b, it.upperBound )
+            assertEquals( it.isEndIncluded, it.isUpperBoundIncluded )
+        }
+
+        val reversed = createAllInclusionTypeIntervals( b, a )
+        reversed.forEach {
+            assertEquals( a, it.lowerBound )
+            assertEquals( it.isEndIncluded, it.isLowerBoundIncluded )
+            assertEquals( b, it.upperBound )
+            assertEquals( it.isStartIncluded, it.isUpperBoundIncluded )
+        }
+
+        val single = createClosedInterval( a, a )
+        assertEquals( a, single.lowerBound )
+        assertEquals( a, single.upperBound )
+        assertTrue( single.isLowerBoundIncluded )
+        assertTrue( single.isUpperBoundIncluded )
+    }
+
+    @Test
     fun size_for_normal_and_reverse_intervals_is_the_same()
     {
         val abIntervals = createAllInclusionTypeIntervals( a, b ) + createAllInclusionTypeIntervals( b, a )
