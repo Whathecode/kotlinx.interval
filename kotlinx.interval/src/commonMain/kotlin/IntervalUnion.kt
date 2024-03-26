@@ -11,6 +11,12 @@ sealed interface IntervalUnion<T : Comparable<T>, TSize : Comparable<TSize>> : I
      * Determines whether this is an empty set, i.e., no value of [T] is contained within.
      */
     fun isEmpty(): Boolean = none()
+
+    /**
+     * Gets the upper and lower bound of this set, and whether they are included. Or, `null` if the set is empty.
+     * Unlike an interval, not all values lying within the upper and lower bound are necessarily part of this set.
+     */
+    fun getBounds(): Interval<T, TSize>?
 }
 
 
@@ -23,6 +29,15 @@ internal class MutableIntervalUnion<T : Comparable<T>, TSize : Comparable<TSize>
     private val intervals: MutableList<Interval<T, TSize>> = mutableListOf()
 
     override fun iterator(): Iterator<Interval<T, TSize>> = intervals.iterator()
+
+    override fun getBounds(): Interval<T, TSize>?
+    {
+        if (isEmpty()) return null
+
+        val first: Interval<T, TSize> = intervals.first()
+        val last: Interval<T, TSize> = intervals.last()
+        return Interval( first.start, first.isStartIncluded, last.end, last.isEndIncluded, first.operations )
+    }
 
     fun add( interval: Interval<T, TSize> )
     {
