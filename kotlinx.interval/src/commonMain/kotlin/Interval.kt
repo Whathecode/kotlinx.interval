@@ -5,6 +5,7 @@ package io.github.whathecode.kotlinx.interval
  * Represents a set of all [T] values lying between a provided [start] and [end] value.
  * [TSize] is the type used to represent the distance between [T] values.
  * The interval can be closed, open, or half-open, as determined by [isStartIncluded] and [isEndIncluded].
+ * But, it can never be empty. Empty sets are represented as [IntervalUnion], with no containing intervals, instead.
  *
  * @throws IllegalArgumentException if an open or half-open interval with the same start and end value is specified.
  */
@@ -17,7 +18,7 @@ open class Interval<T : Comparable<T>, TSize : Comparable<TSize>>(
      * Provide access to the predefined set of operators of [T] and [TSize] and conversions between them.
      */
     private val operations: IntervalTypeOperations<T, TSize>,
-)
+) : IntervalUnion<T, TSize>
 {
     init
     {
@@ -113,11 +114,7 @@ open class Interval<T : Comparable<T>, TSize : Comparable<TSize>>(
         val result = MutableIntervalUnion<T, TSize>()
 
         // When the interval to subtract lies in front or behind, the current interval is unaffected.
-        if ( leftOfCompare > 0 || rightOfCompare < 0 )
-        {
-            result.add( this )
-            return result
-        }
+        if ( leftOfCompare > 0 || rightOfCompare < 0 ) return this
 
         // If the interval to subtract starts after the start of this interval, add the remaining lower bound chunk.
         val startCompare: Int = lowerBound.compareTo( toSubtract.lowerBound )
@@ -196,4 +193,6 @@ open class Interval<T : Comparable<T>, TSize : Comparable<TSize>>(
         result = 31 * result + isEndIncluded.hashCode()
         return result
     }
+
+    override fun iterator(): Iterator<Interval<T, TSize>> = listOf( this ).iterator()
 }
