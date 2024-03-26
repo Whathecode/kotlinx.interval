@@ -17,7 +17,7 @@ open class Interval<T : Comparable<T>, TSize : Comparable<TSize>>(
     /**
      * Provide access to the predefined set of operators of [T] and [TSize] and conversions between them.
      */
-    private val operations: IntervalTypeOperations<T, TSize>,
+    internal val operations: IntervalTypeOperations<T, TSize>
 ) : IntervalUnion<T, TSize>
 {
     init
@@ -194,5 +194,7 @@ open class Interval<T : Comparable<T>, TSize : Comparable<TSize>>(
         return result
     }
 
+    // IntervalUnion implementation; Interval is an IntervalUnion with a single interval.
     override fun iterator(): Iterator<Interval<T, TSize>> = listOf( this ).iterator()
+    override fun getBounds(): Interval<T, TSize> = this
 }
