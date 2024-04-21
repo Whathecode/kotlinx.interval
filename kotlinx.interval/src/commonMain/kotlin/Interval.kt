@@ -117,8 +117,8 @@ open class Interval<T : Comparable<T>, TSize : Comparable<TSize>>(
         if ( leftOfCompare > 0 || rightOfCompare < 0 ) return this
 
         // If the interval to subtract starts after the start of this interval, add the remaining lower bound chunk.
-        val startCompare: Int = lowerBound.compareTo( toSubtract.lowerBound )
-        if ( startCompare < 0 || ( startCompare == 0 && isLowerBoundIncluded && !toSubtract.isLowerBoundIncluded ) )
+        val lowerCompare: Int = lowerBound.compareTo( toSubtract.lowerBound )
+        if ( lowerCompare < 0 || ( lowerCompare == 0 && isLowerBoundIncluded && !toSubtract.isLowerBoundIncluded ) )
         {
             val lowerBoundRemnant = Interval(
                 lowerBound, isLowerBoundIncluded,

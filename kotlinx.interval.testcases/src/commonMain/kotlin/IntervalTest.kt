@@ -236,14 +236,14 @@ abstract class IntervalTest<T : Comparable<T>, TSize : Comparable<TSize>>(
         val abWithA = createClosedInterval( a, b )
         val abWithoutA = createInterval( a, false, b, true )
         assertEquals(
-            createInterval( a, true, a, true ),
+            createClosedInterval( a, a ),
             (abWithA - abWithoutA).singleOrNull()
         )
 
         val abWithB = createClosedInterval( a, b )
         val abWithoutB = createInterval ( a, true, b, false )
         assertEquals(
-            createInterval( b, true, b, true ),
+            createClosedInterval( b, b ),
             (abWithB - abWithoutB).singleOrNull()
         )
 
