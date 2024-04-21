@@ -13,6 +13,35 @@ class MutableIntervalUnionTest
     private fun createEmptyUnion() = MutableIntervalUnion<Int, UInt>()
 
     @Test
+    fun getBounds_for_empty_union_is_null()
+    {
+        val empty = createEmptyUnion()
+        assertEquals( null, empty.getBounds() )
+    }
+
+    @Test
+    fun getBounds_for_single_interval_equals_interval()
+    {
+        val union = createEmptyUnion()
+        val single = interval( 0, 10 )
+        union.add( single )
+
+        assertEquals( single, union.getBounds() )
+    }
+
+    @Test
+    fun getBounds_for_multiple_intervals()
+    {
+        val union = createEmptyUnion()
+        val first = interval( 0, 10 )
+        val lastHalfOpen = interval( 15,20, isEndIncluded = false )
+        union.add( first )
+        union.add( lastHalfOpen )
+
+        assertEquals( interval( 0, 20, isEndIncluded = false ), union.getBounds() )
+    }
+
+    @Test
     fun add_to_empty_succeeds()
     {
         val union = createEmptyUnion()

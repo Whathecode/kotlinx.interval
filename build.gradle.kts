@@ -2,6 +2,11 @@ plugins {
     id("io.github.gradle-nexus.publish-plugin") version "1.1.0"
 }
 
+repositories {
+    mavenCentral()
+    gradlePluginPortal()
+}
+
 // Publish configuration.
 // For signing and publishing to work, a 'publish.properties' file needs to be added to the root containing:
 // The OpenPGP credentials to sign all artifacts:
@@ -16,7 +21,7 @@ if (publishPropertiesFile.exists()) {
     publishProperties.load(java.io.FileInputStream(publishPropertiesFile))
 }
 group = "io.github.whathecode.kotlinx.interval"
-version = "1.0.0-alpha.4"
+version = "1.0.0-alpha.5"
 nexusPublishing {
     repositories {
         sonatype {

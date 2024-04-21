@@ -5,6 +5,7 @@ package io.github.whathecode.kotlinx.interval
  * Represents a set of all [T] values lying between a provided [start] and [end] value.
  * [TSize] is the type used to represent the distance between [T] values.
  * The interval can be closed, open, or half-open, as determined by [isStartIncluded] and [isEndIncluded].
+ * But, it can never be empty. Empty sets are represented as [IntervalUnion], with no containing intervals, instead.
  *
  * @throws IllegalArgumentException if an open or half-open interval with the same start and end value is specified.
  */
@@ -16,8 +17,8 @@ open class Interval<T : Comparable<T>, TSize : Comparable<TSize>>(
     /**
      * Provide access to the predefined set of operators of [T] and [TSize] and conversions between them.
      */
-    private val operations: IntervalTypeOperations<T, TSize>,
-)
+    internal val operations: IntervalTypeOperations<T, TSize>
+) : IntervalUnion<T, TSize>
 {
     init
     {
@@ -47,6 +48,28 @@ open class Interval<T : Comparable<T>, TSize : Comparable<TSize>>(
     inline val isReversed: Boolean get() = start > end
 
     /**
+     * The largest value which is smaller than or equal to all values in the interval (tight lower bound).
+     * This corresponds to [start] or [end], depending on which value is smallest.
+     */
+    inline val lowerBound: T get() = if (isReversed) end else start
+
+    /**
+     * Determines whether [lowerBound] is included in the interval.
+     */
+    inline val isLowerBoundIncluded: Boolean get() = if (isReversed) isEndIncluded else isStartIncluded
+
+    /**
+     * The smallest value which is larger than or equal to all values in the interval (tight upper bound).
+     * This corresponds to [start] or [end], depending on which value is largest.
+     */
+    inline val upperBound: T get() = if (isReversed) start else end
+
+    /**
+     * Determines whether [upperBound] is included in the interval.
+     */
+    inline val isUpperBoundIncluded: Boolean get() = if (isReversed) isStartIncluded else isEndIncluded
+
+    /**
      * The absolute difference between [start] and [end].
      */
     val size: TSize get()
@@ -73,17 +96,84 @@ open class Interval<T : Comparable<T>, TSize : Comparable<TSize>>(
      */
     operator fun contains( value: T ): Boolean
     {
-        class Endpoint( val value: T, val isIncluded: Boolean )
+        val lowerCompare = value.compareTo( lowerBound )
+        val upperCompare = value.compareTo( upperBound )
 
-        val a = Endpoint( start, isStartIncluded )
-        val b = Endpoint( end, isEndIncluded )
-        val (smallest, greatest) = if ( isReversed ) b to a else a to b
+        return ( lowerCompare > 0 || (lowerCompare == 0 && isLowerBoundIncluded) )
+            && ( upperCompare < 0 || (upperCompare == 0 && isUpperBoundIncluded) )
+    }
 
-        val smallestComp = value.compareTo( smallest.value )
-        val greatestComp = value.compareTo( greatest.value )
+    /**
+     * Return an [IntervalUnion] representing all [T] values in this interval,
+     * excluding all [T] values in the specified interval [toSubtract].
+     */
+    operator fun minus( toSubtract: Interval<T, TSize> ): IntervalUnion<T, TSize>
+    {
+        val leftOfCompare: Int = lowerBound.compareTo( toSubtract.upperBound )
+        val rightOfCompare: Int = upperBound.compareTo( toSubtract.lowerBound )
+        val result = MutableIntervalUnion<T, TSize>()
 
-        return ( smallestComp > 0 || (smallestComp == 0 && smallest.isIncluded) )
-            && ( greatestComp < 0 || (greatestComp == 0 && greatest.isIncluded) )
+        // When the interval to subtract lies in front or behind, the current interval is unaffected.
+        if ( leftOfCompare > 0 || rightOfCompare < 0 ) return this
+
+        // If the interval to subtract starts after the start of this interval, add the remaining lower bound chunk.
+        val lowerCompare: Int = lowerBound.compareTo( toSubtract.lowerBound )
+        if ( lowerCompare < 0 || ( lowerCompare == 0 && isLowerBoundIncluded && !toSubtract.isLowerBoundIncluded ) )
+        {
+            val lowerBoundRemnant = Interval(
+                lowerBound, isLowerBoundIncluded,
+                toSubtract.lowerBound, !toSubtract.isLowerBoundIncluded,
+                operations
+            )
+            result.add( lowerBoundRemnant )
+        }
+
+        // If the interval to subtract ends before the end of this interval, add the remaining upper bound chunk.
+        val upperCompare: Int = upperBound.compareTo( toSubtract.upperBound )
+        if ( upperCompare > 0 || ( upperCompare == 0 && isUpperBoundIncluded && !toSubtract.isEndIncluded ) )
+        {
+            val upperBoundRemnant = Interval(
+                toSubtract.upperBound, !toSubtract.isUpperBoundIncluded,
+                upperBound, isUpperBoundIncluded,
+                operations
+            )
+            result.add( upperBoundRemnant )
+        }
+
+        return result
+    }
+
+    /**
+     * Return an [IntervalUnion] representing all [T] values in this interval,
+     * and all [T] in the specified interval [toAdd].
+     */
+    operator fun plus( toAdd: Interval<T, TSize> ): IntervalUnion<T, TSize>
+    {
+        val leftOfCompare: Int = lowerBound.compareTo( toAdd.upperBound )
+        val rightOfCompare: Int = upperBound.compareTo( toAdd.lowerBound )
+
+        // When the interval to add lies in front or behind, no intervals are merged.
+        if ( leftOfCompare > 0 || rightOfCompare < 0 )
+        {
+            return MutableIntervalUnion<T, TSize>().apply {
+                add( this@Interval )
+                add( toAdd )
+            }
+        }
+
+        val lowerCompare: Int = lowerBound.compareTo( toAdd.lowerBound )
+        val upperCompare: Int = upperBound.compareTo( toAdd.upperBound )
+
+        // When one of the intervals contains the other, return the biggest interval.
+        if ( lowerCompare < 0 && upperCompare > 0 ) return this
+        if ( lowerCompare > 0 && upperCompare < 0 ) return toAdd
+
+        // Partially overlapping interval, so the intervals need to be merged.
+        val lower = if ( lowerCompare <= 0 ) this else toAdd
+        val isLowerIncluded = lower.isLowerBoundIncluded || (lowerCompare == 0 && toAdd.isLowerBoundIncluded)
+        val upper = if ( upperCompare >= 0 ) this else toAdd
+        val isUpperIncluded = upper.isUpperBoundIncluded || (upperCompare == 0 && toAdd.isUpperBoundIncluded)
+        return Interval( lower.start, isLowerIncluded, upper.end, isUpperIncluded, operations )
     }
 
     /**
@@ -91,16 +181,13 @@ open class Interval<T : Comparable<T>, TSize : Comparable<TSize>>(
      */
     fun intersects( interval: Interval<T, TSize> ): Boolean
     {
-        val interval1 = nonReversed()
-        val interval2 = interval.nonReversed()
-
-        val rightOfCompare: Int = interval2.start.compareTo( interval1.end )
-        val leftOfCompare: Int = interval2.end.compareTo( interval1.start )
-        val liesRightOf =
-            rightOfCompare > 0 || ( rightOfCompare == 0 && !(interval2.isStartIncluded && interval1.isEndIncluded) )
+        val leftOfCompare: Int = interval.upperBound.compareTo( lowerBound )
+        val rightOfCompare: Int = interval.lowerBound.compareTo( upperBound )
         val liesLeftOf =
-            leftOfCompare < 0 || ( leftOfCompare == 0 && !(interval2.isEndIncluded && interval1.isStartIncluded) )
-        return !( liesRightOf || liesLeftOf )
+            leftOfCompare < 0 || ( leftOfCompare == 0 && !(interval.isUpperBoundIncluded && isLowerBoundIncluded) )
+        val liesRightOf =
+            rightOfCompare > 0 || ( rightOfCompare == 0 && !(interval.isLowerBoundIncluded && isUpperBoundIncluded) )
+        return !( liesLeftOf || liesRightOf )
     }
 
     /**
@@ -139,4 +226,8 @@ open class Interval<T : Comparable<T>, TSize : Comparable<TSize>>(
         result = 31 * result + isEndIncluded.hashCode()
         return result
     }
+
+    // IntervalUnion implementation; Interval is an IntervalUnion with a single interval.
+    override fun iterator(): Iterator<Interval<T, TSize>> = listOf( this ).iterator()
+    override fun getBounds(): Interval<T, TSize> = this
 }

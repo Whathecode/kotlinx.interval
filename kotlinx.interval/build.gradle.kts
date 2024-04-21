@@ -18,7 +18,7 @@ kotlin {
     sourceSets {
         commonTest {
             dependencies {
-                implementation(project(":kotlinx-interval-test"))
+                implementation(project(":kotlinx-interval-testcases"))
             }
         }
     }

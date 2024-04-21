@@ -92,6 +92,32 @@ abstract class IntervalTest<T : Comparable<T>, TSize : Comparable<TSize>>(
     }
 
     @Test
+    fun lowerBound_and_upperBound()
+    {
+        val notReversed = createAllInclusionTypeIntervals( a, b )
+        notReversed.forEach {
+            assertEquals( a, it.lowerBound )
+            assertEquals( it.isStartIncluded, it.isLowerBoundIncluded )
+            assertEquals( b, it.upperBound )
+            assertEquals( it.isEndIncluded, it.isUpperBoundIncluded )
+        }
+
+        val reversed = createAllInclusionTypeIntervals( b, a )
+        reversed.forEach {
+            assertEquals( a, it.lowerBound )
+            assertEquals( it.isEndIncluded, it.isLowerBoundIncluded )
+            assertEquals( b, it.upperBound )
+            assertEquals( it.isStartIncluded, it.isUpperBoundIncluded )
+        }
+
+        val single = createClosedInterval( a, a )
+        assertEquals( a, single.lowerBound )
+        assertEquals( a, single.upperBound )
+        assertTrue( single.isLowerBoundIncluded )
+        assertTrue( single.isUpperBoundIncluded )
+    }
+
+    @Test
     fun size_for_normal_and_reverse_intervals_is_the_same()
     {
         val abIntervals = createAllInclusionTypeIntervals( a, b ) + createAllInclusionTypeIntervals( b, a )
@@ -142,6 +168,192 @@ abstract class IntervalTest<T : Comparable<T>, TSize : Comparable<TSize>>(
     {
         val openIntervals = listOf( createOpenInterval( a, b ), createOpenInterval( b, a ) )
         openIntervals.forEach { assertTrue( a !in it && b !in it ) }
+    }
+
+    @Test
+    fun minus_for_interval_lying_within()
+    {
+        val adIntervals = createAllInclusionTypeIntervals( a, d )
+        val bcIntervals = createAllInclusionTypeIntervals( b, c )
+
+        for ( ad in adIntervals ) for ( bc in bcIntervals )
+        {
+            val expected = setOf(
+                createInterval( a, ad.isStartIncluded, b, !bc.isStartIncluded ),
+                createInterval( c, !bc.isEndIncluded, d, ad.isEndIncluded )
+            )
+            assertEquals( expected, (ad - bc).toSet() )
+        }
+    }
+
+    @Test
+    fun minus_for_partial_overlapping_interval()
+    {
+        val acIntervals = createAllInclusionTypeIntervals( a, c )
+        val bdIntervals = createAllInclusionTypeIntervals( b, d )
+
+        for ( ac in acIntervals ) for ( bd in bdIntervals )
+        {
+            assertEquals(
+                createInterval( a, ac.isStartIncluded, b, !bd.isStartIncluded ),
+                (ac - bd).singleOrNull()
+            )
+        }
+    }
+
+    @Test
+    fun minus_for_matching_interval()
+    {
+        val abIntervals = createAllInclusionTypeIntervals( a, b )
+
+        for ( ab in abIntervals )
+            assertTrue( (ab - ab).isEmpty() )
+    }
+
+    @Test
+    fun minus_for_encompassing_interval()
+    {
+        val bcIntervals = createAllInclusionTypeIntervals( b, c )
+        val adIntervals = createAllInclusionTypeIntervals( a, d )
+
+        for ( bc in bcIntervals ) for ( ad in adIntervals )
+            assertTrue( (bc - ad).isEmpty() )
+    }
+
+    @Test
+    fun minus_for_nonoverlapping_interval()
+    {
+        val abIntervals = createAllInclusionTypeIntervals( a, b )
+        val cdIntervals = createAllInclusionTypeIntervals( c, d )
+
+        for ( ab in abIntervals ) for ( cd in cdIntervals )
+            assertEquals( ab, (ab - cd).singleOrNull() )
+    }
+
+    @Test
+    fun minus_for_overlapping_intervals_with_touching_endpoints()
+    {
+        val abWithA = createClosedInterval( a, b )
+        val abWithoutA = createInterval( a, false, b, true )
+        assertEquals(
+            createClosedInterval( a, a ),
+            (abWithA - abWithoutA).singleOrNull()
+        )
+
+        val abWithB = createClosedInterval( a, b )
+        val abWithoutB = createInterval ( a, true, b, false )
+        assertEquals(
+            createClosedInterval( b, b ),
+            (abWithB - abWithoutB).singleOrNull()
+        )
+
+        val abClosed = createClosedInterval( a, b )
+        val abOpen = createOpenInterval( a, b )
+        assertEquals(
+            setOf( createClosedInterval( a, a ), createClosedInterval( b, b ) ),
+            (abClosed - abOpen).toSet()
+        )
+    }
+
+    @Test
+    fun minus_for_neighbouring_interval_with_touching_endpoints()
+    {
+        val abWithB = createClosedInterval( a, b )
+        val bcWithB = createClosedInterval( b, c )
+        assertEquals(
+            createInterval( a, true, b, false ),
+            (abWithB - bcWithB).singleOrNull()
+        )
+
+        val bcWithoutB = createOpenInterval( b, c )
+        assertEquals( abWithB, (abWithB - bcWithoutB).singleOrNull() )
+    }
+
+    @Test
+    fun plus_for_interval_lying_within()
+    {
+        val adIntervals = createAllInclusionTypeIntervals( a, d )
+        val bcIntervals = createAllInclusionTypeIntervals( b, c )
+
+        for ( ad in adIntervals ) for ( bc in bcIntervals )
+            assertEquals( ad, (ad + bc).singleOrNull() )
+    }
+
+    @Test
+    fun plus_for_partial_overlapping_interval()
+    {
+        val acIntervals = createAllInclusionTypeIntervals( a, c )
+        val bdIntervals = createAllInclusionTypeIntervals( b, d )
+
+        for ( ac in acIntervals ) for ( bd in bdIntervals )
+        {
+            assertEquals(
+                createInterval( a, ac.isStartIncluded, d, bd.isEndIncluded ),
+                (ac + bd).singleOrNull()
+            )
+        }
+    }
+
+    @Test
+    fun plus_for_matching_interval()
+    {
+        val abIntervals = createAllInclusionTypeIntervals( a, b )
+
+        for ( ab in abIntervals )
+            assertEquals( ab, (ab + ab).singleOrNull() )
+    }
+
+    @Test
+    fun plus_for_encompassing_interval()
+    {
+        val bcIntervals = createAllInclusionTypeIntervals( b, c )
+        val adIntervals = createAllInclusionTypeIntervals( a, d )
+
+        for ( bc in bcIntervals ) for ( ad in adIntervals )
+            assertEquals( ad, (bc + ad).singleOrNull() )
+    }
+
+    @Test
+    fun plus_for_nonoverlapping_interval()
+    {
+        val abIntervals = createAllInclusionTypeIntervals( a, b )
+        val cdIntervals = createAllInclusionTypeIntervals( c, d )
+
+        for ( ab in abIntervals ) for ( cd in cdIntervals )
+            assertEquals( setOf( ab, cd ), (ab + cd).toSet() )
+    }
+
+    @Test
+    fun plus_for_overlapping_intervals_with_touching_endpoints()
+    {
+        val abWithA = createClosedInterval( a, b )
+        val abWithoutA = createInterval( a, false, b, true )
+        assertEquals( abWithA, (abWithA + abWithoutA).singleOrNull() )
+
+        val abWithB = createClosedInterval( a, b )
+        val abWithoutB = createInterval ( a, true, b, false )
+        assertEquals( abWithB, (abWithB + abWithoutB).singleOrNull() )
+
+        val abClosed = createClosedInterval( a, b )
+        val abOpen = createOpenInterval( a, b )
+        assertEquals( abClosed, (abClosed + abOpen).singleOrNull() )
+    }
+
+    @Test
+    fun plus_for_neighbouring_interval_with_touching_endpoints()
+    {
+        val abWithB = createClosedInterval( a, b )
+        val bcWithB = createClosedInterval( b, c )
+        assertEquals(
+            createClosedInterval( a, c ),
+            (abWithB + bcWithB).singleOrNull()
+        )
+
+        val bcWithoutB = createOpenInterval( b, c )
+        assertEquals(
+            createInterval( a, true, c, false ),
+            (abWithB + bcWithoutB).singleOrNull()
+        )
     }
 
     @Test
