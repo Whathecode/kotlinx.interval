@@ -144,6 +144,39 @@ open class Interval<T : Comparable<T>, TSize : Comparable<TSize>>(
     }
 
     /**
+     * Return an [IntervalUnion] representing all [T] values in this interval,
+     * and all [T] in the specified interval [toAdd].
+     */
+    operator fun plus( toAdd: Interval<T, TSize> ): IntervalUnion<T, TSize>
+    {
+        val leftOfCompare: Int = lowerBound.compareTo( toAdd.upperBound )
+        val rightOfCompare: Int = upperBound.compareTo( toAdd.lowerBound )
+
+        // When the interval to add lies in front or behind, no intervals are merged.
+        if ( leftOfCompare > 0 || rightOfCompare < 0 )
+        {
+            return MutableIntervalUnion<T, TSize>().apply {
+                add( this@Interval )
+                add( toAdd )
+            }
+        }
+
+        val lowerCompare: Int = lowerBound.compareTo( toAdd.lowerBound )
+        val upperCompare: Int = upperBound.compareTo( toAdd.upperBound )
+
+        // When one of the intervals contains the other, return the biggest interval.
+        if ( lowerCompare < 0 && upperCompare > 0 ) return this
+        if ( lowerCompare > 0 && upperCompare < 0 ) return toAdd
+
+        // Partially overlapping interval, so the intervals need to be merged.
+        val lower = if ( lowerCompare <= 0 ) this else toAdd
+        val isLowerIncluded = lower.isLowerBoundIncluded || (lowerCompare == 0 && toAdd.isLowerBoundIncluded)
+        val upper = if ( upperCompare >= 0 ) this else toAdd
+        val isUpperIncluded = upper.isUpperBoundIncluded || (upperCompare == 0 && toAdd.isUpperBoundIncluded)
+        return Interval( lower.start, isLowerIncluded, upper.end, isUpperIncluded, operations )
+    }
+
+    /**
      * Determines whether [interval] has at least one value in common with this interval.
      */
     fun intersects( interval: Interval<T, TSize> ): Boolean
