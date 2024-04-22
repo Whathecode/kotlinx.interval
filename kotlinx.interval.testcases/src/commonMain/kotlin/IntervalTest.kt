@@ -437,6 +437,22 @@ abstract class IntervalTest<T : Comparable<T>, TSize : Comparable<TSize>>(
         }
     }
 
+    @Test
+    fun toString_matches_common_math_notation()
+    {
+        val closed = createClosedInterval( a, b )
+        assertEquals( "[$a, $b]", closed.toString() )
+
+        val open = createOpenInterval( a, b )
+        assertEquals( "($a, $b)", open.toString() )
+
+        val leftHalfOpen = createInterval( a, false, b, true )
+        assertEquals( "($a, $b]", leftHalfOpen.toString() )
+
+        val rightHalfOpen = createInterval( a, true, b, false )
+        assertEquals( "[$a, $b)", rightHalfOpen.toString() )
+    }
+
     private fun assertIntersects( interval1: Interval<T, TSize>, interval2: Interval<T, TSize>, intersects: Boolean )
     {
         assertEquals( intersects, interval1.intersects( interval2 ) )

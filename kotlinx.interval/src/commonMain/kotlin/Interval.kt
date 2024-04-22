@@ -227,6 +227,13 @@ open class Interval<T : Comparable<T>, TSize : Comparable<TSize>>(
         return result
     }
 
+    override fun toString(): String
+    {
+        val left = if ( isStartIncluded ) "[" else "("
+        val right = if ( isEndIncluded ) "]" else ")"
+        return "$left$start, $end$right"
+    }
+
     // IntervalUnion implementation; Interval is an IntervalUnion with a single interval.
     override fun iterator(): Iterator<Interval<T, TSize>> = listOf( this ).iterator()
     override fun getBounds(): Interval<T, TSize> = this
