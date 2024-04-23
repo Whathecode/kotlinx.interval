@@ -51,4 +51,6 @@ internal class MutableIntervalUnion<T : Comparable<T>, TSize : Comparable<TSize>
 
         intervals.add( interval )
     }
+
+    override fun toString(): String = joinToString( prefix = "[", postfix = "]" )
 }

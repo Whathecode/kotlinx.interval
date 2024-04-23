@@ -104,4 +104,14 @@ class MutableIntervalUnionTest
         val nonOverlappingEndPoint = interval( 10, 20, isStartIncluded = false )
         union.add( nonOverlappingEndPoint )
     }
+
+    @Test
+    fun toString_matches_default_list_formatting()
+    {
+        val union = createEmptyUnion()
+        union.add( interval( 0, 2 ) )
+        union.add( interval( 4, 8 ) )
+
+        assertEquals( "[[0, 2], [4, 8]]", union.toString() )
+    }
 }
