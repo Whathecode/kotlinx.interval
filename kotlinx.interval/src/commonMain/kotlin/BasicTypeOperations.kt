@@ -138,8 +138,7 @@ internal object ULongOperations : TypeOperations<ULong>
 
 internal object CharOperations : TypeOperations<Char>
 {
-    // HACK: a getter is added to fields to work around a JS legacy boxing/unboxing bug.
-    override val additiveIdentity: Char get() = Char( 0 )
+    override val additiveIdentity: Char = Char( 0 )
     override val minValue: Char get() = Char.MIN_VALUE
     override val maxValue: Char get() = Char.MAX_VALUE
 
