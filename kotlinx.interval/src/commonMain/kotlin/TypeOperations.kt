@@ -22,6 +22,12 @@ interface TypeOperations<T : Comparable<T>>
     val maxValue: T
 
     /**
+     * If values of [T] are evenly spaced, the distance between each subsequent value of [T];
+     * null otherwise, e.g., if values of [T] are dense.
+     */
+    val spacing: T?
+
+    /**
      * The binary operation `a + b`, not safeguarded against overflows.
      * The resulting type is cast back to type [T].
      */
