@@ -6,8 +6,10 @@ import kotlin.test.*
 
 
 /**
- * Tests for [Interval] which creates intervals for testing
- * using [a], which should be smaller than [b], which should be smaller than [c].
+ * Tests for [Interval] which creates intervals for testing using [a], which should be smaller than [b],
+ * which should be smaller than [c].
+ * For evenly-spaced types of [T], the distance between [a] and [b], and [b] and [c], should be greater than the spacing
+ * between subsequent values in the set.
  */
 abstract class IntervalTest<T : Comparable<T>, TSize : Comparable<TSize>>(
     private val a: T,
@@ -51,6 +53,15 @@ abstract class IntervalTest<T : Comparable<T>, TSize : Comparable<TSize>>(
     fun is_correct_test_configuration()
     {
         assertTrue( a < b && b < c )
+
+        // For evenly-spaced types, the distance between a-b, and b-c, should be greater than the spacing.
+        val spacing = valueOperations.spacing
+        if ( spacing != null )
+        {
+            val abSize = valueOperations.unsafeSubtract( b, a )
+            val bcSize = valueOperations.unsafeSubtract( c, b )
+            assertTrue( abSize > spacing && bcSize > spacing )
+        }
     }
 
     @Test
@@ -435,6 +446,60 @@ abstract class IntervalTest<T : Comparable<T>, TSize : Comparable<TSize>>(
             assertEquals( original.end, reversed.start )
             assertEquals( original.isEndIncluded, reversed.isStartIncluded )
         }
+    }
+
+    @Test
+    fun setEquals_returns_true_for_set_with_same_bounds()
+    {
+        createAllInclusionTypeIntervals( a, b ).forEach {
+            val exact = createInterval( it.start, it.isStartIncluded, it.end, it.isEndIncluded )
+            assertTrue( it.setEquals( exact ) )
+
+            val reverse = it.reverse()
+            assertTrue( it.setEquals( reverse ) )
+        }
+    }
+
+    @Test
+    fun setEquals_returns_false_for_differing_sets()
+    {
+        val abIntervals = createAllInclusionTypeIntervals( a, b )
+        val acIntervals = createAllInclusionTypeIntervals( a, c )
+        for ( ab in abIntervals ) for ( ac in acIntervals )
+            assertFalse( ab.setEquals( ac ) )
+    }
+
+    @Test
+    fun setEquals_for_evenly_spaced_types_with_differing_bounds_can_still_equal()
+    {
+        // Don't test non-evenly-spaced types.
+        val spacing = valueOperations.spacing ?: return
+
+        val bNext = valueOperations.unsafeAdd( b, spacing )
+        val bPrev = valueOperations.unsafeSubtract( b, spacing )
+
+        // [a, b] == [a, bNext)
+        val bEndInclusive = createClosedInterval( a, b )
+        val bNextExclusive = createInterval( a, true, bNext, false )
+        assertTrue( bEndInclusive.setEquals( bNextExclusive ) )
+
+        // [a, b) != [a, bNext)
+        val bEndExclusive = createInterval( a, true, b, false )
+        assertFalse( bEndExclusive.setEquals( bNextExclusive ) )
+
+        // [b, c] == (bPrev, c]
+        val bStartInclusive = createClosedInterval( b, c )
+        val bPrevExclusive = createInterval( bPrev, false, c, true )
+        assertTrue( bStartInclusive.setEquals( bPrevExclusive ) )
+
+        // (b, c] != (bPrev, c]
+        val bStartExclusive = createInterval( b, false, c, true )
+        assertFalse( bStartExclusive.setEquals( bPrevExclusive ) )
+
+        // [b, b] == (bPrev, bNext)
+        val justB = createClosedInterval( b, b )
+        val bNextPrevExclusive = createInterval( bPrev, false, bNext, false )
+        assertTrue( justB.setEquals( bNextPrevExclusive ) )
     }
 
     @Test
