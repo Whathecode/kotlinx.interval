@@ -221,6 +221,14 @@ open class Interval<T : Comparable<T>, TSize : Comparable<TSize>>(
     }
 
     /**
+     * Determines whether this interval represents the same set of values as the [other] interval.
+     *
+     * Intervals with differing constructor parameters may still represent the same values,
+     * e.g., when they are reversed. For exact equality, use [equals].
+     */
+    fun setEquals( other: Interval<T, TSize> ): Boolean = this.canonicalize() == other.canonicalize()
+
+    /**
      * Determines whether this interval equals [other]'s constructor parameters exactly,
      * i.e., not whether they represent the same set of [T] values, such as matching inverse intervals.
      */
