@@ -205,6 +205,22 @@ open class Interval<T : Comparable<T>, TSize : Comparable<TSize>>(
         Interval( this.end, this.isEndIncluded, this.start, this.isStartIncluded, operations )
 
     /**
+     * Returns the canonical form of the set of all [T] values represented by this interval.
+     * The canonical form is [nonReversed], and for evenly-spaced types (e.g., integers) turns exclusive bounds
+     * into inclusive bounds. E.g. The canonical form of [5, 1) is [2, 5].
+     */
+    fun canonicalize(): Interval<T, TSize>
+    {
+        // Only evenly-spaced types with exclusive bounds can do more than reversing the interval if needed.
+        val spacing = valueOperations.spacing
+        if ( spacing == null || (isStartIncluded && isEndIncluded) ) return nonReversed()
+
+        val start = if ( isLowerBoundIncluded ) lowerBound else valueOperations.unsafeAdd( lowerBound, spacing )
+        val end = if ( isUpperBoundIncluded ) upperBound else valueOperations.unsafeSubtract( upperBound, spacing )
+        return Interval( start, true, end, true, operations )
+    }
+
+    /**
      * Determines whether this interval equals [other]'s constructor parameters exactly,
      * i.e., not whether they represent the same set of [T] values, such as matching inverse intervals.
      */
