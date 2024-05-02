@@ -424,13 +424,13 @@ abstract class IntervalTest<T : Comparable<T>, TSize : Comparable<TSize>>(
     }
 
     @Test
-    fun nonReversed_unchanged_when_not_isReversed()
+    fun nonReversed_returns_same_instance_when_not_isReversed()
     {
         val normal = createAllInclusionTypeIntervals( a, b )
         for ( original in normal )
         {
             val unchanged = original.nonReversed()
-            assertEquals( original, unchanged )
+            assertSame( original, unchanged )
         }
     }
 
@@ -446,6 +446,47 @@ abstract class IntervalTest<T : Comparable<T>, TSize : Comparable<TSize>>(
             assertEquals( original.end, reversed.start )
             assertEquals( original.isEndIncluded, reversed.isStartIncluded )
         }
+    }
+
+    @Test
+    fun canonicalize_returns_same_instance_if_already_canonical()
+    {
+        // For evenly-spaced types, only closed intervals are canonical.
+        val canonicalIntervals =
+            if ( valueOperations.spacing == null ) createAllInclusionTypeIntervals( a, b )
+            else listOf( createClosedInterval( a, b ) )
+
+        canonicalIntervals.forEach { assertSame( it, it.canonicalize() ) }
+    }
+
+    @Test
+    fun canonicalize_reverses_interval_if_reversed()
+    {
+        // For evenly-spaced types, excluded bounds would also be canonicalized.
+        val reversedIntervals =
+            if ( valueOperations.spacing == null ) createAllInclusionTypeIntervals( b, a )
+            else listOf( createClosedInterval( b, a ) )
+
+        reversedIntervals.forEach { assertEquals( it.reverse(), it.canonicalize() ) }
+    }
+
+    @Test
+    fun canonicalize_makes_exclusive_bounds_inclusive()
+    {
+        // Don't test non-evenly-spaced types.
+        val spacing = valueOperations.spacing ?: return
+
+        val bPrev = valueOperations.unsafeSubtract( b, spacing )
+        val aNext = valueOperations.unsafeAdd( a, spacing )
+
+        val bExclusive = createInterval( a, true, b, false )
+        assertEquals( createClosedInterval( a, bPrev ), bExclusive.canonicalize() )
+
+        val aExclusive = createInterval( a, false, b, true )
+        assertEquals( createClosedInterval( aNext, b ), aExclusive.canonicalize() )
+
+        val abExclusive = createOpenInterval( a, b )
+        assertEquals( createClosedInterval( aNext, bPrev ), abExclusive.canonicalize() )
     }
 
     @Test
