@@ -2,7 +2,8 @@ package io.github.whathecode.kotlinx.interval
 
 
 /**
- * Represents a set of all [T] values contained in a collection of non-overlapping [Interval]s.
+ * Represents a set of all [T] values contained in a collection of disjoint, non-adjacent, [Interval]s.
+ * I.e., the intervals don't overlap, and there always lie some values of [T] in between any two intervals.
  * If the collection contains no intervals, it represents an empty set.
  */
 sealed interface IntervalUnion<T : Comparable<T>, TSize : Comparable<TSize>> : Iterable<Interval<T, TSize>>
@@ -22,7 +23,7 @@ sealed interface IntervalUnion<T : Comparable<T>, TSize : Comparable<TSize>> : I
 
 /**
  * An [IntervalUnion] which new intervals can be added to,
- * as long as they are in normalized form, lie after, and don't overlap with previously added intervals.
+ * as long as they lie after and aren't immediately adjacent to, previously added intervals.
  */
 internal class MutableIntervalUnion<T : Comparable<T>, TSize : Comparable<TSize>> : IntervalUnion<T, TSize>
 {
@@ -32,24 +33,30 @@ internal class MutableIntervalUnion<T : Comparable<T>, TSize : Comparable<TSize>
 
     override fun getBounds(): Interval<T, TSize>?
     {
-        if (isEmpty()) return null
+        if ( isEmpty() ) return null
 
         val first: Interval<T, TSize> = intervals.first()
         val last: Interval<T, TSize> = intervals.last()
         return Interval( first.start, first.isStartIncluded, last.end, last.isEndIncluded, first.operations )
     }
 
-    fun add( interval: Interval<T, TSize> )
-    {
-        require( !interval.isReversed )
-            { "The interval is reversed. Normalized form is required." }
-        require( intervals.all { it.start < interval.start } )
-            { "The interval lies before a previously added interval." }
+    fun add( interval: Interval<T, TSize> ) {
+        val toAdd = interval.canonicalize()
         val last = intervals.lastOrNull()
-        require( last == null || !interval.intersects( last ) )
-            { "The interval overlaps with a previously added interval." }
+        require( last == null || toAdd.followsNonAdjacently( last ) )
+            { "The interval doesn't lie after, or is immediately adjacent to, a previously added interval." }
 
-        intervals.add( interval )
+        intervals.add( toAdd )
+    }
+
+    private fun Interval<T, TSize>.followsNonAdjacently( interval: Interval<T, TSize> ): Boolean
+    {
+        val liesAfter = this.start > interval.end ||
+            this.start == interval.end && !(this.isStartIncluded && interval.isEndIncluded)
+        val spacing = interval.valueOperations.spacing
+
+        return liesAfter &&
+            (spacing == null || interval.valueOperations.unsafeSubtract( this.start, interval.end ) > spacing)
     }
 
     override fun toString(): String = joinToString( prefix = "[", postfix = "]" )
