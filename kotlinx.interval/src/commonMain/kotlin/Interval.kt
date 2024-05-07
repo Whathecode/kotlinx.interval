@@ -28,7 +28,7 @@ open class Interval<T : Comparable<T>, TSize : Comparable<TSize>>(
         }
     }
 
-    private val valueOperations = operations.valueOperations
+    internal val valueOperations = operations.valueOperations
     private val sizeOperations = operations.sizeOperations
 
 
