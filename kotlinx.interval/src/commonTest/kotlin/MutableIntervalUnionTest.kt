@@ -8,8 +8,8 @@ import kotlin.test.*
  */
 class MutableIntervalUnionTest
 {
-    // There is no reason to believe interval unions of different types behave differently.
-    // Testing one type should suffice.
+    // For the majority of tests, testing using an evenly-spaced type suffices.
+    // Tests which rely on a non-evenly-spaced type shouldn't use this.
     private fun createEmptyUnion() = MutableIntervalUnion<Int, UInt>()
 
     @Test
@@ -30,15 +30,25 @@ class MutableIntervalUnionTest
     }
 
     @Test
+    fun getBounds_for_non_canonical_interval_is_canonicalized()
+    {
+        val union = createEmptyUnion()
+        val nonCanonical = interval( 10, 0, isStartIncluded = false )
+        union.add( nonCanonical )
+
+        assertEquals( interval( 0, 9 ), union.getBounds() )
+    }
+
+    @Test
     fun getBounds_for_multiple_intervals()
     {
         val union = createEmptyUnion()
         val first = interval( 0, 10 )
-        val lastHalfOpen = interval( 15,20, isEndIncluded = false )
+        val last = interval( 15, 20 )
         union.add( first )
-        union.add( lastHalfOpen )
+        union.add( last )
 
-        assertEquals( interval( 0, 20, isEndIncluded = false ), union.getBounds() )
+        assertEquals( interval( 0, 20 ), union.getBounds() )
     }
 
     @Test
@@ -65,15 +75,6 @@ class MutableIntervalUnionTest
     }
 
     @Test
-    fun add_non_normalized_fails()
-    {
-        val union = createEmptyUnion()
-
-        val nonNormalized = interval( 10, 0 )
-        assertFailsWith<IllegalArgumentException> { union.add( nonNormalized ) }
-    }
-
-    @Test
     fun add_preceding_interval_fails()
     {
         val union = createEmptyUnion()
@@ -96,12 +97,22 @@ class MutableIntervalUnionTest
     }
 
     @Test
-    fun add_non_overlapping_endpoint_succeeds()
+    fun add_adjacent_interval_fails()
     {
         val union = createEmptyUnion()
         union.add( interval( 0, 10 ) )
 
-        val nonOverlappingEndPoint = interval( 10, 20, isStartIncluded = false )
+        val adjacent = interval( 11, 20 )
+        assertFailsWith<IllegalArgumentException> { union.add( adjacent ) }
+    }
+
+    @Test
+    fun add_non_overlapping_endpoint_succeeds()
+    {
+        val union = MutableIntervalUnion<Float, Double>()
+        union.add( interval( 0f, 10f ) )
+
+        val nonOverlappingEndPoint = interval( 10f, 20f, isStartIncluded = false )
         union.add( nonOverlappingEndPoint )
     }
 
