@@ -228,6 +228,12 @@ open class Interval<T : Comparable<T>, TSize : Comparable<TSize>>(
      */
     fun setEquals( other: Interval<T, TSize> ): Boolean = this.canonicalize() == other.canonicalize()
 
+    override fun setEquals( other: IntervalUnion<T, TSize> ): Boolean
+    {
+        val otherInterval = other.singleOrNull() ?: return false
+        return setEquals( otherInterval )
+    }
+
     /**
      * Determines whether this interval equals [other]'s constructor parameters exactly,
      * i.e., not whether they represent the same set of [T] values, such as matching inverse intervals.
