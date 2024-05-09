@@ -117,6 +117,42 @@ class MutableIntervalUnionTest
     }
 
     @Test
+    fun setEquals_with_evenly_spaced_types_succeeds()
+    {
+        val union = createEmptyUnion()
+        union.add( interval( 0, 5 ) )
+        union.add( interval( 10, 15, isEndIncluded = false ) )
+
+        val sameUnion = createEmptyUnion()
+        sameUnion.add( interval( 0, 5 ) )
+        sameUnion.add( interval( 10, 14 ) )
+        assertTrue( union.setEquals( sameUnion ) )
+
+        val differentUnion = createEmptyUnion()
+        differentUnion.add( interval( 0, 5 ) )
+        differentUnion.add( interval( 10, 15 ) )
+        assertFalse( union.setEquals( differentUnion ) )
+    }
+
+    @Test
+    fun setEquals_with_non_evenly_spaced_types_succeeds()
+    {
+        val union = MutableIntervalUnion<Float, Double>()
+        union.add( interval( 0f, 5f ) )
+        union.add( interval( 10f, 15f, isEndIncluded = false ) )
+
+        val sameUnion = MutableIntervalUnion<Float, Double>()
+        sameUnion.add( interval( 0f, 5f ) )
+        sameUnion.add( interval( 10f, 15f, isEndIncluded = false ) )
+        assertTrue( union.setEquals( sameUnion ) )
+
+        val differentUnion = MutableIntervalUnion<Float, Double>()
+        differentUnion.add( interval( 0f, 5f ) )
+        differentUnion.add( interval( 10f, 15f ) )
+        assertFalse( union.setEquals( differentUnion ) )
+    }
+
+    @Test
     fun toString_matches_default_list_formatting()
     {
         val union = createEmptyUnion()

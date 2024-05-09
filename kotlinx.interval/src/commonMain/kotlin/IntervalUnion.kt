@@ -18,6 +18,11 @@ sealed interface IntervalUnion<T : Comparable<T>, TSize : Comparable<TSize>> : I
      * Unlike an interval, not all values lying within the upper and lower bound are necessarily part of this set.
      */
     fun getBounds(): Interval<T, TSize>?
+
+    /**
+     * Determines whether this [IntervalUnion] represents the same set of values as the [other] union.
+     */
+    fun setEquals( other: IntervalUnion<T, TSize> ): Boolean
 }
 
 
@@ -58,6 +63,8 @@ internal class MutableIntervalUnion<T : Comparable<T>, TSize : Comparable<TSize>
         return liesAfter &&
             (spacing == null || interval.valueOperations.unsafeSubtract( this.start, interval.end ) > spacing)
     }
+
+    override fun setEquals( other: IntervalUnion<T, TSize> ): Boolean = this.toSet() == other.toSet()
 
     override fun toString(): String = joinToString( prefix = "[", postfix = "]" )
 }
