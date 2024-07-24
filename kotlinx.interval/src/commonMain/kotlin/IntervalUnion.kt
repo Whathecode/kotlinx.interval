@@ -14,8 +14,10 @@ sealed interface IntervalUnion<T : Comparable<T>, TSize : Comparable<TSize>> : I
     fun isEmpty(): Boolean = none()
 
     /**
-     * Gets the upper and lower bound of this set, and whether they are included. Or, `null` if the set is empty.
-     * Unlike an interval, not all values lying within the upper and lower bound are necessarily part of this set.
+     * Gets the upper and lower bound of this set, and whether they are included, as a canonical interval.
+     * Or, `null` if the set is empty.
+     *
+     * Unless this set is an [Interval], not all values lying within the upper and lower bound are part of this set.
      */
     fun getBounds(): Interval<T, TSize>?
 
@@ -27,44 +29,71 @@ sealed interface IntervalUnion<T : Comparable<T>, TSize : Comparable<TSize>> : I
 
 
 /**
- * An [IntervalUnion] which new intervals can be added to,
- * as long as they lie after and aren't immediately adjacent to, previously added intervals.
+ * Create an [IntervalUnion] which represents a set which contains no values.
  */
-internal class MutableIntervalUnion<T : Comparable<T>, TSize : Comparable<TSize>> : IntervalUnion<T, TSize>
+@Suppress( "UNCHECKED_CAST" )
+internal inline fun <T : Comparable<T>, TSize : Comparable<TSize>> emptyIntervalUnion() =
+    EmptyIntervalUnion as IntervalUnion<T, TSize>
+
+private data object EmptyIntervalUnion : IntervalUnion<Nothing, Nothing>
 {
-    private val intervals: MutableList<Interval<T, TSize>> = mutableListOf()
+    override fun getBounds(): Interval<Nothing, Nothing>? = null
 
-    override fun iterator(): Iterator<Interval<T, TSize>> = intervals.iterator()
+    override fun setEquals( other: IntervalUnion<Nothing, Nothing> ): Boolean = other == this
 
-    override fun getBounds(): Interval<T, TSize>?
+    override fun iterator(): Iterator<Interval<Nothing, Nothing>> = emptyList<Interval<Nothing, Nothing>>().iterator()
+}
+
+
+/**
+ * Create an [IntervalUnion] which holds two disjoint, non-adjacent, and non-empty [IntervalUnion]'s.
+ */
+internal fun <T : Comparable<T>, TSize : Comparable<TSize>> intervalUnionPair(
+    lower: IntervalUnion<T, TSize>,
+    upper: IntervalUnion<T, TSize>
+): IntervalUnion<T, TSize>
+{
+    val lowerBounds = requireNotNull( lower.getBounds() ) { "Lower union should not be empty." }
+    val upperBounds = requireNotNull( upper.getBounds() ) { "Upper union should not be empty." }
+
+    val liesAfter = upperBounds.start > lowerBounds.end ||
+        upperBounds.start == lowerBounds.end && !(upperBounds.isStartIncluded && lowerBounds.isEndIncluded)
+    val spacing = lowerBounds.valueOperations.spacing
+    val followsNonAdjacently = liesAfter &&
+        (spacing == null || lowerBounds.valueOperations.unsafeSubtract( upperBounds.start, lowerBounds.end ) > spacing)
+    require( followsNonAdjacently )
+        { "The upper union doesn't lie after, or is immediately adjacent to, the lower union." }
+
+    val bounds = Interval(
+        lowerBounds.start, lowerBounds.isStartIncluded,
+        upperBounds.end, upperBounds.isEndIncluded,
+        lowerBounds.operations )
+
+    return IntervalUnionPair( lower, upper, bounds )
+}
+
+private class IntervalUnionPair<T : Comparable<T>, TSize : Comparable<TSize>>(
+    val lower: IntervalUnion<T, TSize>,
+    val upper: IntervalUnion<T, TSize>,
+    private val bounds: Interval<T, TSize>
+) : IntervalUnion<T, TSize>
+{
+    override fun iterator(): Iterator<Interval<T, TSize>> =
+        ( lower.asSequence() + upper.asSequence() ).iterator()
+
+    override fun getBounds(): Interval<T, TSize> = bounds
+
+    override fun setEquals( other: IntervalUnion<T, TSize> ): Boolean
     {
-        if ( isEmpty() ) return null
+        val iterateThis = map { it.canonicalize() }.iterator()
+        val iterateOther = other.map { it.canonicalize() }.iterator()
+        while ( iterateThis.hasNext() )
+        {
+            if ( iterateOther.hasNext() && iterateThis.next() != iterateOther.next() ) return false
+        }
 
-        val first: Interval<T, TSize> = intervals.first()
-        val last: Interval<T, TSize> = intervals.last()
-        return Interval( first.start, first.isStartIncluded, last.end, last.isEndIncluded, first.operations )
+        return true
     }
-
-    fun add( interval: Interval<T, TSize> ) {
-        val toAdd = interval.canonicalize()
-        val last = intervals.lastOrNull()
-        require( last == null || toAdd.followsNonAdjacently( last ) )
-            { "The interval doesn't lie after, or is immediately adjacent to, a previously added interval." }
-
-        intervals.add( toAdd )
-    }
-
-    private fun Interval<T, TSize>.followsNonAdjacently( interval: Interval<T, TSize> ): Boolean
-    {
-        val liesAfter = this.start > interval.end ||
-            this.start == interval.end && !(this.isStartIncluded && interval.isEndIncluded)
-        val spacing = interval.valueOperations.spacing
-
-        return liesAfter &&
-            (spacing == null || interval.valueOperations.unsafeSubtract( this.start, interval.end ) > spacing)
-    }
-
-    override fun setEquals( other: IntervalUnion<T, TSize> ): Boolean = this.toSet() == other.toSet()
 
     override fun toString(): String = joinToString( prefix = "[", postfix = "]" )
 }
