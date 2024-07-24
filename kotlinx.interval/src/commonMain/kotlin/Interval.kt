@@ -18,7 +18,7 @@ open class Interval<T : Comparable<T>, TSize : Comparable<TSize>>(
      * Provide access to the predefined set of operators of [T] and [TSize] and conversions between them.
      */
     internal val operations: IntervalTypeOperations<T, TSize>
-) : IntervalUnion<T, TSize>
+) : IntervalUnion<T, TSize>  // Interval is an IntervalUnion with a single interval.
 {
     init
     {
@@ -91,6 +91,10 @@ open class Interval<T : Comparable<T>, TSize : Comparable<TSize>>(
     }
 
 
+    override fun iterator(): Iterator<Interval<T, TSize>> = listOf( this ).iterator()
+
+    override fun getBounds(): Interval<T, TSize> = this.canonicalize()
+
     /**
      * Checks whether [value] lies within this interval.
      */
@@ -111,7 +115,7 @@ open class Interval<T : Comparable<T>, TSize : Comparable<TSize>>(
     {
         val leftOfCompare: Int = lowerBound.compareTo( toSubtract.upperBound )
         val rightOfCompare: Int = upperBound.compareTo( toSubtract.lowerBound )
-        val result = MutableIntervalUnion<T, TSize>()
+        val result = mutableListOf<Interval<T, TSize>>()
 
         // When the interval to subtract lies in front or behind, the current interval is unaffected.
         if ( leftOfCompare > 0 || rightOfCompare < 0 ) return this
@@ -140,7 +144,11 @@ open class Interval<T : Comparable<T>, TSize : Comparable<TSize>>(
             result.add( upperBoundRemnant )
         }
 
-        return result
+        return when ( result.size ) {
+            0 -> emptyIntervalUnion()
+            1 -> result[ 0 ]
+            else -> intervalUnionPair( result[ 0 ], result[ 1 ] )
+        }
     }
 
     /**
@@ -155,10 +163,8 @@ open class Interval<T : Comparable<T>, TSize : Comparable<TSize>>(
         // When the interval to add lies in front or behind, no intervals are merged.
         if ( leftOfCompare > 0 || rightOfCompare < 0 )
         {
-            return MutableIntervalUnion<T, TSize>().apply {
-                add( this@Interval )
-                add( toAdd )
-            }
+            // TODO: There must be a bug here, since there is no guarantee toAdd is the "upper" interval.
+            return intervalUnionPair( lower = this, upper = toAdd )
         }
 
         val lowerCompare: Int = lowerBound.compareTo( toAdd.lowerBound )
@@ -263,8 +269,4 @@ open class Interval<T : Comparable<T>, TSize : Comparable<TSize>>(
         val right = if ( isEndIncluded ) "]" else ")"
         return "$left$start, $end$right"
     }
-
-    // IntervalUnion implementation; Interval is an IntervalUnion with a single interval.
-    override fun iterator(): Iterator<Interval<T, TSize>> = listOf( this ).iterator()
-    override fun getBounds(): Interval<T, TSize> = this
 }
