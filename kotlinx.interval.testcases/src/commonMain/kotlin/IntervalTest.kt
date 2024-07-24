@@ -159,6 +159,13 @@ abstract class IntervalTest<T : Comparable<T>, TSize : Comparable<TSize>>(
     }
 
     @Test
+    fun getBounds_returns_canonicalized_interval()
+    {
+        createAllInclusionTypeIntervals( a, b )
+            .forEach { assertEquals( it.canonicalize(), it.getBounds() ) }
+    }
+
+    @Test
     fun contains_for_values_within_interval()
     {
         val acIntervals = createAllInclusionTypeIntervals( a, c ) + createAllInclusionTypeIntervals( c, a )
@@ -206,7 +213,7 @@ abstract class IntervalTest<T : Comparable<T>, TSize : Comparable<TSize>>(
 
         for ( ac in acIntervals ) for ( bd in bdIntervals )
         {
-            assertUnionEquals(
+            assertEquals(
                 createInterval( a, ac.isStartIncluded, b, !bd.isStartIncluded ),
                 ac - bd
             )
@@ -272,7 +279,7 @@ abstract class IntervalTest<T : Comparable<T>, TSize : Comparable<TSize>>(
     {
         val abWithB = createClosedInterval( a, b )
         val bcWithB = createClosedInterval( b, c )
-        assertUnionEquals(
+        assertEquals(
             createInterval( a, true, b, false ),
             (abWithB - bcWithB)
         )
@@ -579,14 +586,14 @@ abstract class IntervalTest<T : Comparable<T>, TSize : Comparable<TSize>>(
         assertEquals( intersects, interval2Reversed.intersects( interval1Reversed ) )
     }
 
-    private fun assertUnionEquals( expected: Interval<T, TSize>, actual: IntervalUnion<T, TSize> ) =
-        assertUnionEquals( setOf( expected ), actual )
-
+    /**
+     * Used to compare unions with multiple intervals.
+     */
     private fun assertUnionEquals( expected: Set<Interval<T, TSize>>, actual: IntervalUnion<T, TSize> )
     {
-        // Compare canonical form of intervals since unions only contain canonical intervals.
-        val expectedSet = expected.map { it.canonicalize() }.toSet()
+        require( expected.size > 1 )
+            { "This comparison should only be used when multiple intervals are expected." }
 
-        assertEquals( expectedSet, actual.toSet() )
+        assertEquals( expected, actual.toSet() )
     }
 }
