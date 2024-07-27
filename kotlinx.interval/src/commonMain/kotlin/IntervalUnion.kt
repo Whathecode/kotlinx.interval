@@ -22,6 +22,12 @@ sealed interface IntervalUnion<T : Comparable<T>, TSize : Comparable<TSize>> : I
     fun getBounds(): Interval<T, TSize>?
 
     /**
+     * Return an [IntervalUnion] representing all [T] values in this set,
+     * and including all [T] in the specified interval [toAdd].
+     */
+    operator fun plus( toAdd: Interval<T, TSize> ): IntervalUnion<T, TSize>
+
+    /**
      * Determines whether this [IntervalUnion] represents the same set of values as the [other] union.
      */
     fun setEquals( other: IntervalUnion<T, TSize> ): Boolean
@@ -38,6 +44,8 @@ internal inline fun <T : Comparable<T>, TSize : Comparable<TSize>> emptyInterval
 private data object EmptyIntervalUnion : IntervalUnion<Nothing, Nothing>
 {
     override fun getBounds(): Interval<Nothing, Nothing>? = null
+
+    override fun plus( toAdd: Interval<Nothing, Nothing> ): IntervalUnion<Nothing, Nothing> = toAdd
 
     override fun setEquals( other: IntervalUnion<Nothing, Nothing> ): Boolean = other == this
 
@@ -86,6 +94,36 @@ private class IntervalUnionPair<T : Comparable<T>, TSize : Comparable<TSize>, TU
         ( lower.asSequence() + upper.asSequence() ).iterator()
 
     override fun getBounds(): Interval<T, TSize> = bounds
+
+    override fun plus( toAdd: Interval<T, TSize> ): IntervalUnion<T, TSize>
+    {
+        // When `toAdd` lies outside this union's bounds, prepend or append it.
+        // When it fully encompasses this union, `toAdd` replaces it.
+        val pairCompare = IntervalUnionComparison.of( this, toAdd )
+        if ( pairCompare.isSplitPair ) return pairCompare.asSplitPair()
+        if ( pairCompare.isFullyEncompassed && pairCompare.lower == toAdd ) return toAdd
+
+        // When `toAdd` only impacts `lower` or `upper`, recursively add the new interval to the impacted union.
+        // Or, if neither are impacted, the new interval must lie in between `lower` and `upper`.
+        val lowerPairCompare = IntervalUnionComparison.of( lower, toAdd )
+        val upperPairCompare = IntervalUnionComparison.of( upper, toAdd )
+        if ( lowerPairCompare.isSplitPair )
+        {
+            return if ( upperPairCompare.isSplitPair ) intervalUnionPair( lowerPairCompare.asSplitPair(), upper )
+            else intervalUnionPair( lower, upper + toAdd )
+        }
+        else if ( upperPairCompare.isSplitPair ) return intervalUnionPair( lower + toAdd, upper )
+
+        // When both the `lower` and `upper` union are impacted, but either is fully encompassed by `toAdd`,
+        // recursively add `toAdd` to the only partially impacted union.
+        if ( lowerPairCompare.isFullyEncompassed ) return upper + toAdd
+        if ( upperPairCompare.isFullyEncompassed ) return lower + toAdd
+
+        // With all other options excluded, both `lower` and `upper` are partially impacted.
+        // TODO: This doesn't make use of known bounds of nested unions in `upper`, only for `lower` through recursion.
+        //  This can likely be optimized.
+        return upper.fold( lower + toAdd ) { result, upperInterval -> result + upperInterval }
+    }
 
     override fun setEquals( other: IntervalUnion<T, TSize> ): Boolean
     {
