@@ -155,7 +155,7 @@ open class Interval<T : Comparable<T>, TSize : Comparable<TSize>>(
      * Return an [IntervalUnion] representing all [T] values in this interval,
      * and all [T] in the specified interval [toAdd].
      */
-    operator fun plus( toAdd: Interval<T, TSize> ): IntervalUnion<T, TSize>
+    override operator fun plus( toAdd: Interval<T, TSize> ): IntervalUnion<T, TSize>
     {
         // When the intervals are disjoint and non-adjacent, no intervals are merged.
         val pairCompare = IntervalUnionComparison.of( this, toAdd )
