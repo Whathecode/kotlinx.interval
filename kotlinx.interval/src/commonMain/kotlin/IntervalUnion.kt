@@ -47,37 +47,41 @@ private data object EmptyIntervalUnion : IntervalUnion<Nothing, Nothing>
 
 /**
  * Create an [IntervalUnion] which holds two disjoint, non-adjacent, and non-empty [IntervalUnion]'s.
+ *
+ * @throws IllegalArgumentException when [union1] or [union2] is empty,
+ * or the two pairs are not disjoint and non-adjacent.
  */
 internal fun <T : Comparable<T>, TSize : Comparable<TSize>> intervalUnionPair(
-    lower: IntervalUnion<T, TSize>,
-    upper: IntervalUnion<T, TSize>
+    union1: IntervalUnion<T, TSize>,
+    union2: IntervalUnion<T, TSize>
 ): IntervalUnion<T, TSize>
 {
-    val lowerBounds = requireNotNull( lower.getBounds() ) { "Lower union should not be empty." }
-    val upperBounds = requireNotNull( upper.getBounds() ) { "Upper union should not be empty." }
-
-    val liesAfter = upperBounds.start > lowerBounds.end ||
-        upperBounds.start == lowerBounds.end && !(upperBounds.isStartIncluded && lowerBounds.isEndIncluded)
-    val spacing = lowerBounds.valueOperations.spacing
-    val followsNonAdjacently = liesAfter &&
-        (spacing == null || lowerBounds.valueOperations.unsafeSubtract( upperBounds.start, lowerBounds.end ) > spacing)
-    require( followsNonAdjacently )
-        { "The upper union doesn't lie after, or is immediately adjacent to, the lower union." }
-
-    val bounds = Interval(
-        lowerBounds.start, lowerBounds.isStartIncluded,
-        upperBounds.end, upperBounds.isEndIncluded,
-        lowerBounds.operations )
-
-    return IntervalUnionPair( lower, upper, bounds )
+    val compare = IntervalUnionComparison.of( union1, union2 )
+    return IntervalUnionPair( compare )
 }
 
-private class IntervalUnionPair<T : Comparable<T>, TSize : Comparable<TSize>>(
-    val lower: IntervalUnion<T, TSize>,
-    val upper: IntervalUnion<T, TSize>,
-    private val bounds: Interval<T, TSize>
+/**
+ * Combines the previously compared [IntervalUnion]'s into a single new [IntervalUnion] containing both
+ * (both are returned when iterated), provided that they are disjoint and non-adjacent.
+ *
+ * @throws IllegalArgumentException when [IntervalUnionComparison.isSplitPair] is false.
+ */
+internal fun <T : Comparable<T>, TSize : Comparable<TSize>, TUnion : IntervalUnion<T, TSize>>
+    IntervalUnionComparison<T, TSize, TUnion>.asSplitPair(): IntervalUnion<T, TSize> = IntervalUnionPair( this )
+
+private class IntervalUnionPair<T : Comparable<T>, TSize : Comparable<TSize>, TUnion : IntervalUnion<T, TSize>>(
+    unionPair: IntervalUnionComparison<T, TSize, TUnion>
 ) : IntervalUnion<T, TSize>
 {
+    init { require( unionPair.isSplitPair ) { "The pair of unions passed are not disjoint and non-adjacent." } }
+
+    private val lower: TUnion = unionPair.lower
+    private val upper: TUnion = unionPair.upper
+    private val bounds: Interval<T, TSize> = Interval(
+        unionPair.lowerBounds.start, unionPair.lowerBounds.isStartIncluded,
+        unionPair.upperBounds.end, unionPair.upperBounds.isEndIncluded,
+        unionPair.lowerBounds.operations )
+
     override fun iterator(): Iterator<Interval<T, TSize>> =
         ( lower.asSequence() + upper.asSequence() ).iterator()
 

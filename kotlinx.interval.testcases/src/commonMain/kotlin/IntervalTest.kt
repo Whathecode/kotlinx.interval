@@ -314,6 +314,21 @@ abstract class IntervalTest<T : Comparable<T>, TSize : Comparable<TSize>>(
     }
 
     @Test
+    fun plus_for_partial_overlapping_reversed_interval()
+    {
+        val acIntervals = createAllInclusionTypeIntervals( a, c ).map { it.reverse() }
+        val bdIntervals = createAllInclusionTypeIntervals( b, d ).map { it.reverse() }
+
+        for ( ac in acIntervals ) for ( bd in bdIntervals )
+        {
+            assertEquals(
+                createInterval( a, ac.isLowerBoundIncluded, d, bd.isUpperBoundIncluded ),
+                (ac + bd).singleOrNull()
+            )
+        }
+    }
+
+    @Test
     fun plus_for_matching_interval()
     {
         val abIntervals = createAllInclusionTypeIntervals( a, b )
@@ -339,7 +354,10 @@ abstract class IntervalTest<T : Comparable<T>, TSize : Comparable<TSize>>(
         val cdIntervals = createAllInclusionTypeIntervals( c, d )
 
         for ( ab in abIntervals ) for ( cd in cdIntervals )
+        {
             assertUnionEquals( setOf( ab, cd ), ab + cd )
+            assertUnionEquals( setOf( ab, cd ), cd + ab )
+        }
     }
 
     @Test
@@ -373,6 +391,21 @@ abstract class IntervalTest<T : Comparable<T>, TSize : Comparable<TSize>>(
             createInterval( a, true, c, false ),
             (abWithB + bcWithoutB).singleOrNull()
         )
+    }
+
+    @Test
+    fun plus_for_adjacent_intervals()
+    {
+        // Don't test non-evenly-spaced types.
+        val spacing = valueOperations.spacing ?: return
+
+        val ab = createClosedInterval( a, b )
+        val bNext = valueOperations.unsafeAdd( b, spacing )
+        val bNextC = createClosedInterval( bNext, c )
+
+        val expected = createClosedInterval( a, c )
+        assertEquals( expected, ab + bNextC )
+        assertEquals( expected, bNextC + ab )
     }
 
     @Test

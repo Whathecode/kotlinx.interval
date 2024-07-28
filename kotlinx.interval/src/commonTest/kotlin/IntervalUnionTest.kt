@@ -54,6 +54,15 @@ class IntervalUnionPairTest
     }
 
     @Test
+    fun initialize_adjacent_pairs_with_evenly_spaced_types_fails()
+    {
+        val first = interval( 0, 10 )
+        val adjacent = interval( 11, 20 )
+
+        assertFailsWith<IllegalArgumentException> { intervalUnionPair( first, adjacent ) }
+    }
+
+    @Test
     fun initialize_adjacent_pairs_fails()
     {
         val first = interval( 0, 10 )
@@ -68,7 +77,7 @@ class IntervalUnionPairTest
         val first = interval( 0f, 10f )
         val nonOverlappingEndPoint = interval( 10f, 20f, isStartIncluded = false )
 
-        intervalUnionPair( first, nonOverlappingEndPoint )
+        assertFailsWith<IllegalArgumentException> { intervalUnionPair( first, nonOverlappingEndPoint ) }
     }
 
     @Test
