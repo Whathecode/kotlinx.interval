@@ -23,6 +23,12 @@ sealed interface IntervalUnion<T : Comparable<T>, TSize : Comparable<TSize>> : I
 
     /**
      * Return an [IntervalUnion] representing all [T] values in this set,
+     * excluding all [T] values in the specified interval [toSubtract].
+     */
+    operator fun minus( toSubtract: Interval<T, TSize> ): IntervalUnion<T, TSize>
+
+    /**
+     * Return an [IntervalUnion] representing all [T] values in this set,
      * and including all [T] in the specified interval [toAdd].
      */
     operator fun plus( toAdd: Interval<T, TSize> ): IntervalUnion<T, TSize>
@@ -44,6 +50,8 @@ internal inline fun <T : Comparable<T>, TSize : Comparable<TSize>> emptyInterval
 private data object EmptyIntervalUnion : IntervalUnion<Nothing, Nothing>
 {
     override fun getBounds(): Interval<Nothing, Nothing>? = null
+
+    override fun minus( toSubtract: Interval<Nothing, Nothing> ): IntervalUnion<Nothing, Nothing> = this
 
     override fun plus( toAdd: Interval<Nothing, Nothing> ): IntervalUnion<Nothing, Nothing> = toAdd
 
@@ -94,6 +102,24 @@ private class IntervalUnionPair<T : Comparable<T>, TSize : Comparable<TSize>, TU
         ( lower.asSequence() + upper.asSequence() ).iterator()
 
     override fun getBounds(): Interval<T, TSize> = bounds
+
+    override fun minus( toSubtract: Interval<T, TSize> ): IntervalUnion<T, TSize>
+    {
+        // When `toSubtract` lies outside this union's bounds, no intervals are affected.
+        // When it fully encompasses this union, nothing is left after subtraction.
+        val pairCompare = IntervalUnionComparison.of( this, toSubtract )
+        if ( pairCompare.isSplitPair ) return this
+        if ( pairCompare.isFullyEncompassed && pairCompare.lower == toSubtract ) return emptyIntervalUnion()
+
+        // Ignore `lower` or `upper if it would become empty after subtraction; recurse on the side with a remainder.
+        val lowerPairCompare = IntervalUnionComparison.of( lower, toSubtract )
+        if ( lowerPairCompare.isFullyEncompassed ) return upper - toSubtract
+        val upperPairCompare = IntervalUnionComparison.of( upper, toSubtract )
+        if ( upperPairCompare.isFullyEncompassed ) return lower - toSubtract
+
+        // Both `lower` and `upper` have a remainder, so recursively subtract from both sides.
+        return intervalUnionPair( lower - toSubtract, upper - toSubtract )
+    }
 
     override fun plus( toAdd: Interval<T, TSize> ): IntervalUnion<T, TSize>
     {
