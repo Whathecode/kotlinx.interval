@@ -26,6 +26,24 @@ val areIncluded = now + 50.seconds in interval // true
 val size: Duration = interval.size // 100 seconds
 ```
 
+## Interval Unions
+
+Intervals are a subset of _interval unions_, which represent a collection of intervals.
+The result of operations on an interval can result in an interval union (e.g. `interval(1, 2) + interval(4, 5)`).
+An interval union can contain any number of intervals.
+
+| Intervals in a union |             Description             | 
+|:--------------------:|:-----------------------------------:|
+|          0           |            An empty set             |
+|          1           |             An interval             |
+|         > 1          | Disjoint and non-adjacent intervals |
+
+Intervals in a union can be iterated over in order and don't intersect (are disjoint), and will always have _some_ values lying in between them (are non-adjacent).
+E.g., `[4, 5]` and `[6, 7]` are adjacent intervals in case they use integer types.
+Two non-intersecting intervals with a shared endpoint are also adjacent, regardless of type, if one of the intervals includes the endpoint.
+E.g., `[4.0, 5.0)` and `[5.0, 7.0]` are adjacent.
+Instead, these are represented as a single interval: `[4, 7]` and `[4.0, 7.0]` respectively.
+
 ## Interval Types
 
 This library includes a generic base class `Interval<T, TSize>` which can be used to create intervals for any type.
