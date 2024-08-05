@@ -17,6 +17,13 @@ class EmptyIntervalUnionTest
     fun getBounds_for_empty_union_is_null() = assertEquals( null, empty.getBounds() )
 
     @Test
+    fun minus_returns_empty_interval()
+    {
+        val toSubtract = interval( 0, 10 )
+        assertEquals( empty, empty - toSubtract )
+    }
+
+    @Test
     fun plus_returns_added_interval()
     {
         val toAdd = interval( 0, 10 )
@@ -106,6 +113,109 @@ class IntervalUnionPairTest
         val union = intervalUnionPair( nonCanonicalLower, nonCanonicalUpper )
 
         assertEquals( interval( 1, 19 ), union.getBounds() )
+    }
+
+    @Test
+    fun minus_interval_with_no_intersection()
+    {
+        val lower = interval( 5, 10 )
+        val upper = interval( 15, 20 )
+        val union = intervalUnionPair( lower, upper )
+
+        val noImpact = listOf(
+            interval( 0, 1 ), // Lies before.
+            interval( 24, 25 ), // Lies behind.
+            interval( 0, 5, isEndIncluded = false ), // Adjacent in front.
+            interval( 20, 25, isStartIncluded = false ), // Adjacent behind.
+            interval( 11, 14 ) // Lies in between.
+        )
+
+        val expectedUnion = union.toSet()
+        noImpact.forEach { assertUnionEquals( expectedUnion, union - it ) }
+    }
+
+    @Test
+    fun minus_encompassing_interval()
+    {
+        val lower = interval( 5, 10 )
+        val upper = interval( 15, 20 )
+        val union = intervalUnionPair( lower, upper )
+
+        val encompassing = interval( 0, 25 )
+        assertEquals( emptyIntervalUnion(), union - encompassing )
+    }
+
+    @Test
+    fun minus_for_interval_encompassing_one_of_the_unions_in_pair()
+    {
+        val lower = interval( 5, 10 )
+        val upper = interval( 15, 20 )
+        val union = intervalUnionPair( lower, upper )
+
+        val encompassingLower = interval( 4, 11 )
+        assertEquals( upper, union - encompassingLower )
+
+        val encompassingUpper = interval( 14, 21 )
+        assertEquals( lower, union - encompassingUpper )
+
+        val encompassingLowerAndIntersectingUpper = interval( 4, 16 )
+        assertEquals(
+            interval( 16, 20, isStartIncluded = false ),
+            union - encompassingLowerAndIntersectingUpper
+        )
+
+        val encompassingUpperAndIntersectingLower = interval( 10, 21 )
+        assertEquals(
+            interval( 5, 10, isEndIncluded = false ),
+            union - encompassingUpperAndIntersectingLower
+        )
+    }
+
+    @Test
+    fun minus_for_interval_partially_overlapping_with_both_intervals_in_union()
+    {
+        val lower = interval( 5, 10 )
+        val upper = interval( 15, 20 )
+        val union = intervalUnionPair( lower, upper )
+
+        val overlapsBoth = interval( 7, 18 )
+        assertUnionEquals(
+            setOf(
+                interval(5, 7, isEndIncluded = false ),
+                interval( 18, 20, isStartIncluded = false )
+            ),
+            union - overlapsBoth
+        )
+    }
+
+    @Test
+    fun minus_for_interval_partially_overlapping_with_both_unions_in_union()
+    {
+        val lower1 = interval( 5, 10 )
+        val upper1 = interval( 15, 20 )
+        val lower2 = interval( 25, 30 )
+        val upper2 = interval( 35, 40 )
+        val union = intervalUnionPair(
+            intervalUnionPair( lower1, upper1 ),
+            intervalUnionPair( lower2, upper2 )
+        )
+
+        val encompassesInnerIntervals = interval( 12, 32 )
+        assertUnionEquals(
+            setOf( lower1, upper2 ),
+            union - encompassesInnerIntervals
+        )
+
+        val overlapsBothInnerIntervals = interval( 18, 28 )
+        assertUnionEquals(
+            setOf(
+                lower1,
+                interval( 15, 18, isEndIncluded = false ),
+                interval( 28, 30, isStartIncluded = false ),
+                upper2
+            ),
+            union - overlapsBothInnerIntervals
+        )
     }
 
     @Test

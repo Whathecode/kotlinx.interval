@@ -111,7 +111,7 @@ open class Interval<T : Comparable<T>, TSize : Comparable<TSize>>(
      * Return an [IntervalUnion] representing all [T] values in this interval,
      * excluding all [T] values in the specified interval [toSubtract].
      */
-    operator fun minus( toSubtract: Interval<T, TSize> ): IntervalUnion<T, TSize>
+    override operator fun minus( toSubtract: Interval<T, TSize> ): IntervalUnion<T, TSize>
     {
         val leftOfCompare: Int = lowerBound.compareTo( toSubtract.upperBound )
         val rightOfCompare: Int = upperBound.compareTo( toSubtract.lowerBound )
