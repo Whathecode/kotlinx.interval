@@ -29,8 +29,19 @@ val size: Duration = interval.size // 100 seconds
 ## Interval Unions
 
 Intervals are a subset of _interval unions_, which represent a collection of intervals.
-The result of operations on an interval can result in an interval union (e.g. `interval(1, 2) + interval(4, 5)`).
-An interval union can contain any number of intervals.
+The result of operations on an interval can result in an interval union.
+Since operations are generally defined on the base interface, you can easily chain operations without caring about the concrete type.
+
+```kotlin
+val start = interval( 0, 100 ) // Interval: [0, 100]
+val areIncluded = 50 in start && 100 in start // true
+val splitInTwo = start - interval( 25, 85 ) // Union: [[0, 25), (85, 100]]
+val areExcluded = 50 !in splitInTwo && 85 !in splitInTwo // true
+val unite = splitInTwo + interval( 10, 90 ) // Interval: [0, 100]
+val backToStart = start == unite // true
+```
+
+An interval union contains any number of intervals.
 
 | Intervals in a union |             Description             | 
 |:--------------------:|:-----------------------------------:|
@@ -43,6 +54,42 @@ E.g., `[4, 5]` and `[6, 7]` are adjacent intervals in case they use integer type
 Two non-intersecting intervals with a shared endpoint are also adjacent, regardless of type, if one of the intervals includes the endpoint.
 E.g., `[4.0, 5.0)` and `[5.0, 7.0]` are adjacent.
 Instead, these are represented as a single interval: `[4, 7]` and `[4.0, 7.0]` respectively.
+
+## Operations
+
+Intervals and interval unions are immutable.
+Operations don't modify the instance the operation is executed on.
+Instead, new instances are returned if the operation results in a different set of values.
+
+The following operations are available for any `IntervalUnion<T, TSize>`:
+
+|      Operation      |                                         Description                                          | 
+|:-------------------:|:--------------------------------------------------------------------------------------------:|
+|     `isEmpty()`     |                           Determines whether this is an empty set.                           |
+|    `getBounds()`    |                          Gets the upper and lower bound of the set.                          |
+| `contains()` (`in`) |                         Determines whether a value lies in the set.                          |
+|   `minus()` (`-`)   |                              Subtract an interval from the set.                              |
+|   `plus()` (`+`)    |                                Add an interval from the set.                                 |
+|    `setEquals()`    |                     Determines whether a set represents the same values.                     |
+|    `iterator()`     |                      Iterate over all intervals in the union, in order.                      |
+|    `toString()`     | Output as a string using common interval notation, e.g., `[0, 10]` or `[[0, 10), (10, 20]]`. |
+
+The following operations are specific to `Interval<T, TSize>`:
+
+|                   Operation                    |                                                Description                                                 | 
+|:----------------------------------------------:|:----------------------------------------------------------------------------------------------------------:|
+|                 `start`, `end`                 |                     The values originally passed as the start and end of the interval.                     |
+|       `isStartIncluded`, `isEndIncluded`       |              Determines whether `start` and `end` respectively are included in the interval.               |
+|               `isClosedInterval`               |                  Determines whether both `start` and `end` are included in the interval.                   |
+|                `isOpenInterval`                |                 Determines whether both `start` and `end` are excluded from the interval.                  |
+|                  `isReversed`                  |                             Determines whether `start` is greater than `end`.                              |
+|           `lowerBound`, `upperBound`           |                       Corresponds to `start` and `end`, but swapped if `isReversed`.                       |
+| `isLowerBoundIncluded`, `isUpperBoundIncluded` |             Corresponds to `isStartIncluded` and `isEndIncluded`, but swapped if `isReversed`.             |
+|                     `size`                     |                             The absolute difference between `start` and `end`.                             |
+|                 `intersects()`                 |                       Determines whether another interval intersects with this one.                        |
+|                `nonReversed()`                 |                             `reverse()` the interval in case it `isReversed`.                              |
+|                  `reverse()`                   |             Return an interval which swaps `start` with `end`, as well as boundary inclusions.             |
+|                `canonicalize()`                | Return the interval in canonical form. E.g., The canonical form of `[5, 1)` is `[2, 5]` for integer types. |
 
 ## Interval Types
 
