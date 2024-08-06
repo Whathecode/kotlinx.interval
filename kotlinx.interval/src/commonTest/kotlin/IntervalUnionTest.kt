@@ -116,6 +116,20 @@ class IntervalUnionPairTest
     }
 
     @Test
+    fun contains_succeeds()
+    {
+        val lower = interval( 5, 10, isStartIncluded = false )
+        val upper = interval( 15, 20, isEndIncluded = false )
+        val union = intervalUnionPair( lower, upper )
+
+        val included = listOf( 6, 8, 10, 15, 17 )
+        included.forEach { assertTrue( it in union ) }
+
+        val excluded = listOf( 4, 5, 12, 20, 25 )
+        excluded.forEach { assertFalse( it in union ) }
+    }
+
+    @Test
     fun minus_interval_with_no_intersection()
     {
         val lower = interval( 5, 10 )

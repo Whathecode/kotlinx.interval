@@ -22,6 +22,11 @@ sealed interface IntervalUnion<T : Comparable<T>, TSize : Comparable<TSize>> : I
     fun getBounds(): Interval<T, TSize>?
 
     /**
+     * Checks whether [value] lies within this set.
+     */
+    operator fun contains( value: T ): Boolean
+
+    /**
      * Return an [IntervalUnion] representing all [T] values in this set,
      * excluding all [T] values in the specified interval [toSubtract].
      */
@@ -50,6 +55,8 @@ internal inline fun <T : Comparable<T>, TSize : Comparable<TSize>> emptyInterval
 private data object EmptyIntervalUnion : IntervalUnion<Nothing, Nothing>
 {
     override fun getBounds(): Interval<Nothing, Nothing>? = null
+
+    override fun contains( value: Nothing ): Boolean = false
 
     override fun minus( toSubtract: Interval<Nothing, Nothing> ): IntervalUnion<Nothing, Nothing> = this
 
@@ -102,6 +109,18 @@ private class IntervalUnionPair<T : Comparable<T>, TSize : Comparable<TSize>, TU
         ( lower.asSequence() + upper.asSequence() ).iterator()
 
     override fun getBounds(): Interval<T, TSize> = bounds
+
+    override fun contains( value: T ): Boolean
+    {
+        if ( lower is Interval<*, *> && value in lower ) return true
+        if ( upper is Interval<*, *> && value in upper ) return true
+
+        // Use bounds check to preempt unnecessary recursion for interval unions.
+        if ( lower.getBounds()?.contains( value ) == true ) return value in lower
+        if ( upper.getBounds()?.contains( value ) == true ) return value in upper
+
+        return false
+    }
 
     override fun minus( toSubtract: Interval<T, TSize> ): IntervalUnion<T, TSize>
     {
