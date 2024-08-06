@@ -98,7 +98,7 @@ open class Interval<T : Comparable<T>, TSize : Comparable<TSize>>(
     /**
      * Checks whether [value] lies within this interval.
      */
-    operator fun contains( value: T ): Boolean
+    override operator fun contains( value: T ): Boolean
     {
         val lowerCompare = value.compareTo( lowerBound )
         val upperCompare = value.compareTo( upperBound )
