@@ -174,7 +174,7 @@ open class Interval<T : Comparable<T>, TSize : Comparable<TSize>>(
     /**
      * Determines whether [interval] has at least one value in common with this interval.
      */
-    fun intersects( interval: Interval<T, TSize> ): Boolean
+    override fun intersects( interval: Interval<T, TSize> ): Boolean
     {
         val leftOfCompare: Int = interval.upperBound.compareTo( lowerBound )
         val rightOfCompare: Int = interval.lowerBound.compareTo( upperBound )

@@ -70,6 +70,7 @@ The following operations are available for any `IntervalUnion<T, TSize>`:
 | `contains()` (`in`) |                         Determines whether a value lies in the set.                          |
 |   `minus()` (`-`)   |                              Subtract an interval from the set.                              |
 |   `plus()` (`+`)    |                                Add an interval from the set.                                 |
+|   `intersects()`    |                Determines whether another interval intersects with this set.                 |
 |    `setEquals()`    |                     Determines whether a set represents the same values.                     |
 |    `iterator()`     |                      Iterate over all intervals in the union, in order.                      |
 |    `toString()`     | Output as a string using common interval notation, e.g., `[0, 10]` or `[[0, 10), (10, 20]]`. |
@@ -86,7 +87,6 @@ The following operations are specific to `Interval<T, TSize>`:
 |           `lowerBound`, `upperBound`           |                       Corresponds to `start` and `end`, but swapped if `isReversed`.                       |
 | `isLowerBoundIncluded`, `isUpperBoundIncluded` |             Corresponds to `isStartIncluded` and `isEndIncluded`, but swapped if `isReversed`.             |
 |                     `size`                     |                             The absolute difference between `start` and `end`.                             |
-|                 `intersects()`                 |                       Determines whether another interval intersects with this one.                        |
 |                `nonReversed()`                 |                             `reverse()` the interval in case it `isReversed`.                              |
 |                  `reverse()`                   |             Return an interval which swaps `start` with `end`, as well as boundary inclusions.             |
 |                `canonicalize()`                | Return the interval in canonical form. E.g., The canonical form of `[5, 1)` is `[2, 5]` for integer types. |
