@@ -21,7 +21,7 @@ if (publishPropertiesFile.exists()) {
     publishProperties.load(java.io.FileInputStream(publishPropertiesFile))
 }
 group = "io.github.whathecode.kotlinx.interval"
-version = "1.0.0-alpha.5"
+version = "1.0.0"
 nexusPublishing {
     repositories {
         sonatype {
