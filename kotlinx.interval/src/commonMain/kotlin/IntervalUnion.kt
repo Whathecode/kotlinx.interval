@@ -39,6 +39,11 @@ sealed interface IntervalUnion<T : Comparable<T>, TSize : Comparable<TSize>> : I
     operator fun plus( toAdd: Interval<T, TSize> ): IntervalUnion<T, TSize>
 
     /**
+     * Determines whether [interval] has at least one value in common with this set.
+     */
+    fun intersects( interval: Interval<T, TSize> ): Boolean
+
+    /**
      * Determines whether this [IntervalUnion] represents the same set of values as the [other] union.
      */
     fun setEquals( other: IntervalUnion<T, TSize> ): Boolean
@@ -61,6 +66,8 @@ private data object EmptyIntervalUnion : IntervalUnion<Nothing, Nothing>
     override fun minus( toSubtract: Interval<Nothing, Nothing> ): IntervalUnion<Nothing, Nothing> = this
 
     override fun plus( toAdd: Interval<Nothing, Nothing> ): IntervalUnion<Nothing, Nothing> = toAdd
+
+    override fun intersects( interval: Interval<Nothing, Nothing> ): Boolean = false
 
     override fun setEquals( other: IntervalUnion<Nothing, Nothing> ): Boolean = other == this
 
@@ -168,6 +175,18 @@ private class IntervalUnionPair<T : Comparable<T>, TSize : Comparable<TSize>, TU
         // TODO: This doesn't make use of known bounds of nested unions in `upper`, only for `lower` through recursion.
         //  This can likely be optimized.
         return upper.fold( lower + toAdd ) { result, upperInterval -> result + upperInterval }
+    }
+
+    override fun intersects( interval: Interval<T, TSize> ): Boolean
+    {
+        if ( lower is Interval<*, *> && lower.intersects( interval ) ) return true
+        if ( upper is Interval<*, *> && upper.intersects( interval ) ) return true
+
+        // Use bounds check to preempt unnecessary recursion for interval unions.
+        if ( lower.getBounds()?.intersects( interval ) == true ) return lower.intersects( interval )
+        if ( upper.getBounds()?.intersects( interval ) == true ) return upper.intersects( interval )
+
+        return false
     }
 
     override fun setEquals( other: IntervalUnion<T, TSize> ): Boolean

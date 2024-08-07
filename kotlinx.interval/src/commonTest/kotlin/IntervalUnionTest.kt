@@ -347,6 +347,33 @@ class IntervalUnionPairTest
     }
 
     @Test
+    fun intersects_succeeds()
+    {
+        val lower = interval( 5, 10, isStartIncluded = false )
+        val upper = interval( 15, 20, isEndIncluded = false )
+        val union = intervalUnionPair( lower, upper )
+
+        val intersects = listOf(
+            interval( 0, 6 ),
+            interval( 6, 8 ),
+            interval( 10, 11 ),
+            interval( 11, 16 ),
+            interval( 16, 18 ),
+            interval( 19, 30 )
+        )
+        intersects.forEach { assertTrue( union.intersects( it ) ) }
+
+        val noIntersection = listOf(
+            interval( 0, 4 ),
+            interval( 3, 5 ),
+            interval( 11,14 ),
+            interval( 20, 25 ),
+            interval( 25, 30 )
+        )
+        noIntersection.forEach { assertFalse( union.intersects( it ) ) }
+    }
+
+    @Test
     fun setEquals_with_evenly_spaced_types_succeeds()
     {
         val union = intervalUnionPair(
