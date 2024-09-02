@@ -134,7 +134,7 @@ open class Interval<T : Comparable<T>, TSize : Comparable<TSize>>(
 
         // If the interval to subtract ends before the end of this interval, add the remaining upper bound chunk.
         val upperCompare: Int = upperBound.compareTo( toSubtract.upperBound )
-        if ( upperCompare > 0 || ( upperCompare == 0 && isUpperBoundIncluded && !toSubtract.isEndIncluded ) )
+        if ( upperCompare > 0 || ( upperCompare == 0 && isUpperBoundIncluded && !toSubtract.isUpperBoundIncluded ) )
         {
             val upperBoundRemnant = Interval(
                 toSubtract.upperBound, !toSubtract.isUpperBoundIncluded,
