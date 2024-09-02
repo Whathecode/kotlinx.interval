@@ -2,12 +2,15 @@ package io.github.whathecode.kotlinx.interval.test
 
 import io.github.whathecode.kotlinx.interval.Interval
 import io.github.whathecode.kotlinx.interval.IntervalTypeOperations
+import io.github.whathecode.kotlinx.interval.IntervalUnion
 import kotlin.test.*
 
 
 /**
- * Tests for [Interval] which creates intervals for testing
- * using [a], which should be smaller than [b], which should be smaller than [c].
+ * Tests for [Interval] which creates intervals for testing using [a], which should be smaller than [b],
+ * which should be smaller than [c].
+ * For evenly-spaced types of [T], the distance between [a] and [b], and [b] and [c], should be greater than the spacing
+ * between subsequent values in the set.
  */
 abstract class IntervalTest<T : Comparable<T>, TSize : Comparable<TSize>>(
     private val a: T,
@@ -51,6 +54,15 @@ abstract class IntervalTest<T : Comparable<T>, TSize : Comparable<TSize>>(
     fun is_correct_test_configuration()
     {
         assertTrue( a < b && b < c )
+
+        // For evenly-spaced types, the distance between a-b, and b-c, should be greater than the spacing.
+        val spacing = valueOperations.spacing
+        if ( spacing != null )
+        {
+            val abSize = valueOperations.unsafeSubtract( b, a )
+            val bcSize = valueOperations.unsafeSubtract( c, b )
+            assertTrue( abSize > spacing && bcSize > spacing )
+        }
     }
 
     @Test
@@ -147,6 +159,13 @@ abstract class IntervalTest<T : Comparable<T>, TSize : Comparable<TSize>>(
     }
 
     @Test
+    fun getBounds_returns_canonicalized_interval()
+    {
+        createAllInclusionTypeIntervals( a, b )
+            .forEach { assertEquals( it.canonicalize(), it.getBounds() ) }
+    }
+
+    @Test
     fun contains_for_values_within_interval()
     {
         val acIntervals = createAllInclusionTypeIntervals( a, c ) + createAllInclusionTypeIntervals( c, a )
@@ -182,7 +201,7 @@ abstract class IntervalTest<T : Comparable<T>, TSize : Comparable<TSize>>(
                 createInterval( a, ad.isStartIncluded, b, !bc.isStartIncluded ),
                 createInterval( c, !bc.isEndIncluded, d, ad.isEndIncluded )
             )
-            assertEquals( expected, (ad - bc).toSet() )
+            assertUnionEquals( expected, ad - bc )
         }
     }
 
@@ -196,7 +215,7 @@ abstract class IntervalTest<T : Comparable<T>, TSize : Comparable<TSize>>(
         {
             assertEquals(
                 createInterval( a, ac.isStartIncluded, b, !bd.isStartIncluded ),
-                (ac - bd).singleOrNull()
+                ac - bd
             )
         }
     }
@@ -262,7 +281,7 @@ abstract class IntervalTest<T : Comparable<T>, TSize : Comparable<TSize>>(
         val bcWithB = createClosedInterval( b, c )
         assertEquals(
             createInterval( a, true, b, false ),
-            (abWithB - bcWithB).singleOrNull()
+            (abWithB - bcWithB)
         )
 
         val bcWithoutB = createOpenInterval( b, c )
@@ -295,6 +314,21 @@ abstract class IntervalTest<T : Comparable<T>, TSize : Comparable<TSize>>(
     }
 
     @Test
+    fun plus_for_partial_overlapping_reversed_interval()
+    {
+        val acIntervals = createAllInclusionTypeIntervals( a, c ).map { it.reverse() }
+        val bdIntervals = createAllInclusionTypeIntervals( b, d ).map { it.reverse() }
+
+        for ( ac in acIntervals ) for ( bd in bdIntervals )
+        {
+            assertEquals(
+                createInterval( a, ac.isLowerBoundIncluded, d, bd.isUpperBoundIncluded ),
+                (ac + bd).singleOrNull()
+            )
+        }
+    }
+
+    @Test
     fun plus_for_matching_interval()
     {
         val abIntervals = createAllInclusionTypeIntervals( a, b )
@@ -320,7 +354,10 @@ abstract class IntervalTest<T : Comparable<T>, TSize : Comparable<TSize>>(
         val cdIntervals = createAllInclusionTypeIntervals( c, d )
 
         for ( ab in abIntervals ) for ( cd in cdIntervals )
-            assertEquals( setOf( ab, cd ), (ab + cd).toSet() )
+        {
+            assertUnionEquals( setOf( ab, cd ), ab + cd )
+            assertUnionEquals( setOf( ab, cd ), cd + ab )
+        }
     }
 
     @Test
@@ -354,6 +391,21 @@ abstract class IntervalTest<T : Comparable<T>, TSize : Comparable<TSize>>(
             createInterval( a, true, c, false ),
             (abWithB + bcWithoutB).singleOrNull()
         )
+    }
+
+    @Test
+    fun plus_for_adjacent_intervals()
+    {
+        // Don't test non-evenly-spaced types.
+        val spacing = valueOperations.spacing ?: return
+
+        val ab = createClosedInterval( a, b )
+        val bNext = valueOperations.unsafeAdd( b, spacing )
+        val bNextC = createClosedInterval( bNext, c )
+
+        val expected = createClosedInterval( a, c )
+        assertEquals( expected, ab + bNextC )
+        assertEquals( expected, bNextC + ab )
     }
 
     @Test
@@ -413,13 +465,13 @@ abstract class IntervalTest<T : Comparable<T>, TSize : Comparable<TSize>>(
     }
 
     @Test
-    fun nonReversed_unchanged_when_not_isReversed()
+    fun nonReversed_returns_same_instance_when_not_isReversed()
     {
         val normal = createAllInclusionTypeIntervals( a, b )
         for ( original in normal )
         {
             val unchanged = original.nonReversed()
-            assertEquals( original, unchanged )
+            assertSame( original, unchanged )
         }
     }
 
@@ -435,6 +487,117 @@ abstract class IntervalTest<T : Comparable<T>, TSize : Comparable<TSize>>(
             assertEquals( original.end, reversed.start )
             assertEquals( original.isEndIncluded, reversed.isStartIncluded )
         }
+    }
+
+    @Test
+    fun canonicalize_returns_same_instance_if_already_canonical()
+    {
+        // For evenly-spaced types, only closed intervals are canonical.
+        val canonicalIntervals =
+            if ( valueOperations.spacing == null ) createAllInclusionTypeIntervals( a, b )
+            else listOf( createClosedInterval( a, b ) )
+
+        canonicalIntervals.forEach { assertSame( it, it.canonicalize() ) }
+    }
+
+    @Test
+    fun canonicalize_reverses_interval_if_reversed()
+    {
+        // For evenly-spaced types, excluded bounds would also be canonicalized.
+        val reversedIntervals =
+            if ( valueOperations.spacing == null ) createAllInclusionTypeIntervals( b, a )
+            else listOf( createClosedInterval( b, a ) )
+
+        reversedIntervals.forEach { assertEquals( it.reverse(), it.canonicalize() ) }
+    }
+
+    @Test
+    fun canonicalize_makes_exclusive_bounds_inclusive()
+    {
+        // Don't test non-evenly-spaced types.
+        val spacing = valueOperations.spacing ?: return
+
+        val bPrev = valueOperations.unsafeSubtract( b, spacing )
+        val aNext = valueOperations.unsafeAdd( a, spacing )
+
+        val bExclusive = createInterval( a, true, b, false )
+        assertEquals( createClosedInterval( a, bPrev ), bExclusive.canonicalize() )
+
+        val aExclusive = createInterval( a, false, b, true )
+        assertEquals( createClosedInterval( aNext, b ), aExclusive.canonicalize() )
+
+        val abExclusive = createOpenInterval( a, b )
+        assertEquals( createClosedInterval( aNext, bPrev ), abExclusive.canonicalize() )
+    }
+
+    @Test
+    fun setEquals_returns_true_for_set_with_same_bounds()
+    {
+        createAllInclusionTypeIntervals( a, b ).forEach {
+            val exact = createInterval( it.start, it.isStartIncluded, it.end, it.isEndIncluded )
+            assertTrue( it.setEquals( exact ) )
+
+            val reverse = it.reverse()
+            assertTrue( it.setEquals( reverse ) )
+        }
+    }
+
+    @Test
+    fun setEquals_returns_false_for_differing_sets()
+    {
+        val abIntervals = createAllInclusionTypeIntervals( a, b )
+        val acIntervals = createAllInclusionTypeIntervals( a, c )
+        for ( ab in abIntervals ) for ( ac in acIntervals )
+            assertFalse( ab.setEquals( ac ) )
+    }
+
+    @Test
+    fun setEquals_for_evenly_spaced_types_with_differing_bounds_can_still_equal()
+    {
+        // Don't test non-evenly-spaced types.
+        val spacing = valueOperations.spacing ?: return
+
+        val bNext = valueOperations.unsafeAdd( b, spacing )
+        val bPrev = valueOperations.unsafeSubtract( b, spacing )
+
+        // [a, b] == [a, bNext)
+        val bEndInclusive = createClosedInterval( a, b )
+        val bNextExclusive = createInterval( a, true, bNext, false )
+        assertTrue( bEndInclusive.setEquals( bNextExclusive ) )
+
+        // [a, b) != [a, bNext)
+        val bEndExclusive = createInterval( a, true, b, false )
+        assertFalse( bEndExclusive.setEquals( bNextExclusive ) )
+
+        // [b, c] == (bPrev, c]
+        val bStartInclusive = createClosedInterval( b, c )
+        val bPrevExclusive = createInterval( bPrev, false, c, true )
+        assertTrue( bStartInclusive.setEquals( bPrevExclusive ) )
+
+        // (b, c] != (bPrev, c]
+        val bStartExclusive = createInterval( b, false, c, true )
+        assertFalse( bStartExclusive.setEquals( bPrevExclusive ) )
+
+        // [b, b] == (bPrev, bNext)
+        val justB = createClosedInterval( b, b )
+        val bNextPrevExclusive = createInterval( bPrev, false, bNext, false )
+        assertTrue( justB.setEquals( bNextPrevExclusive ) )
+    }
+
+    @Test
+    fun toString_matches_common_math_notation()
+    {
+        val closed = createClosedInterval( a, b )
+        assertEquals( "[$a, $b]", closed.toString() )
+
+        val open = createOpenInterval( a, b )
+        assertEquals( "($a, $b)", open.toString() )
+
+        val leftHalfOpen = createInterval( a, false, b, true )
+        assertEquals( "($a, $b]", leftHalfOpen.toString() )
+
+        val rightHalfOpen = createInterval( a, true, b, false )
+        assertEquals( "[$a, $b)", rightHalfOpen.toString() )
     }
 
     private fun assertIntersects( interval1: Interval<T, TSize>, interval2: Interval<T, TSize>, intersects: Boolean )
@@ -454,5 +617,16 @@ abstract class IntervalTest<T : Comparable<T>, TSize : Comparable<TSize>>(
 
         assertEquals( intersects, interval1Reversed.intersects( interval2Reversed ) )
         assertEquals( intersects, interval2Reversed.intersects( interval1Reversed ) )
+    }
+
+    /**
+     * Used to compare unions with multiple intervals.
+     */
+    private fun assertUnionEquals( expected: Set<Interval<T, TSize>>, actual: IntervalUnion<T, TSize> )
+    {
+        require( expected.size > 1 )
+            { "This comparison should only be used when multiple intervals are expected." }
+
+        assertEquals( expected, actual.toSet() )
     }
 }

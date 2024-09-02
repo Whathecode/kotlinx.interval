@@ -1,5 +1,5 @@
 plugins {
-    id("io.github.gradle-nexus.publish-plugin") version "1.1.0"
+    id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
 }
 
 repositories {
@@ -21,7 +21,7 @@ if (publishPropertiesFile.exists()) {
     publishProperties.load(java.io.FileInputStream(publishPropertiesFile))
 }
 group = "io.github.whathecode.kotlinx.interval"
-version = "1.0.0-alpha.5"
+version = "1.0.0"
 nexusPublishing {
     repositories {
         sonatype {

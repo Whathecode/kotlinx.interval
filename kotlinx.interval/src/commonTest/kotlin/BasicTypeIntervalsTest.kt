@@ -17,4 +17,4 @@ object UIntIntervalTest :
     IntervalTest<UInt, UInt>( 0.toUInt(), 5.toUInt(), 10.toUInt(), 5.toUInt(), UIntInterval.Operations )
 object ULongIntervalTest :
     IntervalTest<ULong, ULong>( 0.toULong(), 5.toULong(), 10.toULong(), 5.toULong(), ULongInterval.Operations )
-object CharIntervalTest : IntervalTest<Char, UShort>( 'a', 'b', 'c', 1.toUShort(), CharInterval.Operations )
+object CharIntervalTest : IntervalTest<Char, UShort>( 'a', 'c', 'e', 2.toUShort(), CharInterval.Operations )
