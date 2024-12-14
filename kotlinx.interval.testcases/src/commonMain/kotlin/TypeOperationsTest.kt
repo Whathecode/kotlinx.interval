@@ -8,6 +8,7 @@ import kotlin.test.*
  * Tests for [typeOperations] which uses the variables [a] and [b],
  * and expected results of operations as specified by the corresponding test properties (e.g., [aMinusB]).
  */
+@Suppress( "FunctionName" )
 abstract class TypeOperationsTest<T : Comparable<T>>(
     private val typeOperations: TypeOperations<T>,
     private val a: T,
