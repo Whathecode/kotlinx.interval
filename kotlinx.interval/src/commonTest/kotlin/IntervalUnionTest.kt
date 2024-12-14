@@ -11,10 +11,13 @@ class EmptyIntervalUnionTest
     private val empty = emptyIntervalUnion<Int, UInt>()
 
     @Test
-    fun isEmpty() = assertTrue( empty.isEmpty() )
+    fun isEmpty_is_true() = assertTrue( empty.isEmpty() )
 
     @Test
-    fun getBounds_for_empty_union_is_null() = assertEquals( null, empty.getBounds() )
+    fun getBounds_is_null() = assertEquals( null, empty.getBounds() )
+
+    @Test
+    fun contains_is_always_false() = assertFalse( empty.contains( 42 ) )
 
     @Test
     fun minus_returns_empty_interval()
@@ -31,7 +34,10 @@ class EmptyIntervalUnionTest
     }
 
     @Test
-    fun setEquals_only_other_empty_union() = assertTrue( empty.setEquals( emptyIntervalUnion() ) )
+    fun intersects_is_always_false() = assertFalse( empty.intersects( interval( 0, 10 ) ) )
+
+    @Test
+    fun setEquals_only_true_compared_to_other_empty_union() = assertTrue( empty.setEquals( emptyIntervalUnion() ) )
 }
 
 

@@ -12,6 +12,7 @@ import kotlin.test.*
  * For evenly-spaced types of [T], the distance between [a] and [b], and [b] and [c], should be greater than the spacing
  * between subsequent values in the set.
  */
+@Suppress( "FunctionName" )
 abstract class IntervalTest<T : Comparable<T>, TSize : Comparable<TSize>>(
     private val a: T,
     private val b: T,
@@ -154,11 +155,11 @@ abstract class IntervalTest<T : Comparable<T>, TSize : Comparable<TSize>>(
     }
 
     @Test
-    fun size_for_empty_interval_is_zero()
+    fun size_for_interval_with_one_value_is_zero()
     {
         val zero = sizeOperations.additiveIdentity
-        val emptyInterval = createClosedInterval( a, a )
-        assertEquals( zero, emptyInterval.size )
+        val oneValue = createClosedInterval( a, a )
+        assertEquals( zero, oneValue.size )
     }
 
     @Test

@@ -54,24 +54,29 @@ sealed interface IntervalUnion<T : Comparable<T>, TSize : Comparable<TSize>> : I
  * Create an [IntervalUnion] which represents a set which contains no values.
  */
 @Suppress( "UNCHECKED_CAST" )
-internal inline fun <T : Comparable<T>, TSize : Comparable<TSize>> emptyIntervalUnion() =
-    EmptyIntervalUnion as IntervalUnion<T, TSize>
+fun <T : Comparable<T>, TSize : Comparable<TSize>> emptyIntervalUnion() = EmptyIntervalUnion as IntervalUnion<T, TSize>
 
-data object EmptyIntervalUnion : IntervalUnion<Nothing, Nothing>
+private data object EmptyIntervalUnion : IntervalUnion<Comparable<Any>, Comparable<Any>>
 {
-    override fun getBounds(): Interval<Nothing, Nothing>? = null
+    override fun getBounds(): Interval<Comparable<Any>, Comparable<Any>>? = null
 
-    override fun contains( value: Nothing ): Boolean = false
+    override fun contains( value: Comparable<Any> ): Boolean = false
 
-    override fun minus( toSubtract: Interval<Nothing, Nothing> ): IntervalUnion<Nothing, Nothing> = this
+    override fun minus(
+        toSubtract: Interval<Comparable<Any>, Comparable<Any>>
+    ): IntervalUnion<Comparable<Any>, Comparable<Any>> = this
 
-    override fun plus( toAdd: Interval<Nothing, Nothing> ): IntervalUnion<Nothing, Nothing> = toAdd
+    override fun plus(
+        toAdd: Interval<Comparable<Any>, Comparable<Any>>
+    ): IntervalUnion<Comparable<Any>, Comparable<Any>> = toAdd
 
-    override fun intersects( interval: Interval<Nothing, Nothing> ): Boolean = false
 
-    override fun setEquals( other: IntervalUnion<Nothing, Nothing> ): Boolean = other == this
+    override fun intersects( interval: Interval<Comparable<Any>, Comparable<Any>> ): Boolean = false
 
-    override fun iterator(): Iterator<Interval<Nothing, Nothing>> = emptyList<Interval<Nothing, Nothing>>().iterator()
+    override fun setEquals( other: IntervalUnion<Comparable<Any>, Comparable<Any>> ): Boolean = other == this
+
+    override fun iterator(): Iterator<Interval<Comparable<Any>, Comparable<Any>>> =
+        emptyList<Interval<Comparable<Any>, Comparable<Any>>>().iterator()
 }
 
 
