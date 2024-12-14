@@ -57,7 +57,7 @@ sealed interface IntervalUnion<T : Comparable<T>, TSize : Comparable<TSize>> : I
 internal inline fun <T : Comparable<T>, TSize : Comparable<TSize>> emptyIntervalUnion() =
     EmptyIntervalUnion as IntervalUnion<T, TSize>
 
-private data object EmptyIntervalUnion : IntervalUnion<Nothing, Nothing>
+data object EmptyIntervalUnion : IntervalUnion<Nothing, Nothing>
 {
     override fun getBounds(): Interval<Nothing, Nothing>? = null
 
