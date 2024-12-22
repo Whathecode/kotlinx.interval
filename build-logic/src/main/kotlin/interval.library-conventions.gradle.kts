@@ -40,7 +40,6 @@ kotlin {
     macosArm64()
     iosSimulatorArm64()
     iosX64()
-    iosArm64()
 
     mingwX64()
 
