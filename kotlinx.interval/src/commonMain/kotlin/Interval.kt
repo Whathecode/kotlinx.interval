@@ -22,6 +22,11 @@ open class Interval<T : Comparable<T>, TSize : Comparable<TSize>>(
 {
     init
     {
+        require( lowerBound >= operations.minValue )
+            { "Lower bound shouldn't be smaller than ${operations.minValue} to prevent interval size overflows." }
+        require( upperBound <= operations.maxValue )
+            { "Upper bound shouldn't be greater than ${operations.maxValue} to prevent interval size overflows." }
+
         if ( !isStartIncluded || !isEndIncluded )
         {
             require( start != end ) { "Open or half-open intervals should have differing start and end value." }

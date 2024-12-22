@@ -12,11 +12,14 @@ class ByteInterval( start: Byte, isStartIncluded: Boolean, end: Byte, isEndInclu
 {
     companion object
     {
-        internal val Operations = createIntervalTypeOperations<Byte, UByte>()
+        internal val Operations = createIntervalTypeOperations<Byte, UByte>(
+            getDistanceTo =
             {
                 if ( it < 0 ) (0 - it).toUByte()
                 else it.toUByte()
-            }
+            },
+            unsafeValueAt = { it.toByte() }
+        )
     }
 }
 
@@ -37,11 +40,14 @@ class ShortInterval( start: Short, isStartIncluded: Boolean, end: Short, isEndIn
 {
     companion object
     {
-        internal val Operations = createIntervalTypeOperations<Short, UShort>()
+        internal val Operations = createIntervalTypeOperations<Short, UShort>(
+            getDistanceTo =
             {
                 if ( it < 0 ) (0 - it).toUShort()
                 else it.toUShort()
-            }
+            },
+            unsafeValueAt = { it.toShort() }
+        )
     }
 }
 
@@ -62,11 +68,14 @@ class IntInterval( start: Int, isStartIncluded: Boolean, end: Int, isEndIncluded
 {
     companion object
     {
-        internal val Operations = createIntervalTypeOperations<Int, UInt>()
+        internal val Operations = createIntervalTypeOperations<Int, UInt>(
+            getDistanceTo =
             {
                 if ( it < 0 ) (0 - it).toUInt()
                 else it.toUInt()
-            }
+            },
+            unsafeValueAt = { it.toInt() }
+        )
     }
 }
 
@@ -87,11 +96,14 @@ class LongInterval( start: Long, isStartIncluded: Boolean, end: Long, isEndInclu
 {
     companion object
     {
-        internal val Operations = createIntervalTypeOperations<Long, ULong>()
+        internal val Operations = createIntervalTypeOperations<Long, ULong>(
+            getDistanceTo =
             {
                 if ( it < 0 ) (0 - it).toULong()
                 else it.toULong()
-            }
+            },
+            unsafeValueAt = { it.toLong() }
+        )
     }
 }
 
@@ -112,7 +124,10 @@ class FloatInterval( start: Float, isStartIncluded: Boolean, end: Float, isEndIn
 {
     companion object
     {
-        internal val Operations = createIntervalTypeOperations<Float, Double> { it.absoluteValue.toDouble() }
+        internal val Operations = createIntervalTypeOperations<Float, Double>(
+            getDistanceTo = { it.absoluteValue.toDouble() },
+            unsafeValueAt = { it.toFloat() }
+        )
     }
 }
 
@@ -135,7 +150,10 @@ class DoubleInterval( start: Double, isStartIncluded: Boolean, end: Double, isEn
 {
     companion object
     {
-        internal val Operations = createIntervalTypeOperations<Double, Double> { it.absoluteValue }
+        internal val Operations = createIntervalTypeOperations<Double, Double>(
+            getDistanceTo = { it.absoluteValue },
+            unsafeValueAt = { it }
+        )
     }
 }
 
@@ -156,7 +174,10 @@ class UByteInterval( start: UByte, isStartIncluded: Boolean, end: UByte, isEndIn
 {
     companion object
     {
-        internal val Operations = createIntervalTypeOperations<UByte, UByte> { it }
+        internal val Operations = createIntervalTypeOperations<UByte, UByte>(
+            getDistanceTo = { it },
+            unsafeValueAt = { it },
+        )
     }
 }
 
@@ -177,7 +198,10 @@ class UShortInterval( start: UShort, isStartIncluded: Boolean, end: UShort, isEn
 {
     companion object
     {
-        internal val Operations = createIntervalTypeOperations<UShort, UShort> { it }
+        internal val Operations = createIntervalTypeOperations<UShort, UShort>(
+            getDistanceTo = { it },
+            unsafeValueAt = { it }
+        )
     }
 }
 
@@ -198,7 +222,10 @@ class UIntInterval( start: UInt, isStartIncluded: Boolean, end: UInt, isEndInclu
 {
     companion object
     {
-        internal val Operations = createIntervalTypeOperations<UInt, UInt> { it }
+        internal val Operations = createIntervalTypeOperations<UInt, UInt>(
+            getDistanceTo = { it },
+            unsafeValueAt = { it }
+        )
     }
 }
 
@@ -219,7 +246,10 @@ class ULongInterval( start: ULong, isStartIncluded: Boolean, end: ULong, isEndIn
 {
     companion object
     {
-        internal val Operations = createIntervalTypeOperations<ULong, ULong> { it }
+        internal val Operations = createIntervalTypeOperations<ULong, ULong>(
+            getDistanceTo = { it },
+            unsafeValueAt = { it }
+        )
     }
 }
 
@@ -240,7 +270,10 @@ class CharInterval( start: Char, isStartIncluded: Boolean, end: Char, isEndInclu
 {
     companion object
     {
-        internal val Operations = createIntervalTypeOperations<Char, UShort> { it.code.toUShort() }
+        internal val Operations = createIntervalTypeOperations<Char, UShort>(
+            getDistanceTo = { it.code.toUShort() },
+            unsafeValueAt = { Char( it ) }
+        )
     }
 }
 
