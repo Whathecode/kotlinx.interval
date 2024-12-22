@@ -69,7 +69,8 @@ The following operations are available for any `IntervalUnion<T, TSize>`:
 |    `getBounds()`    |                          Gets the upper and lower bound of the set.                          |
 | `contains()` (`in`) |                         Determines whether a value lies in the set.                          |
 |   `minus()` (`-`)   |                              Subtract an interval from the set.                              |
-|   `plus()` (`+`)    |                                Add an interval from the set.                                 |
+|   `plus()` (`+`)    |                                 Add an interval to the set.                                  |
+|      `shift()`      |                           Move the interval by a specified offset.                           |
 |   `intersects()`    |                Determines whether another interval intersects with this set.                 |
 |    `setEquals()`    |                     Determines whether a set represents the same values.                     |
 |    `iterator()`     |                      Iterate over all intervals in the union, in order.                      |

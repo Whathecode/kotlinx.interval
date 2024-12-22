@@ -160,6 +160,46 @@ open class Interval<T : Comparable<T>, TSize : Comparable<TSize>>(
             pairCompare.lower.operations )
     }
 
+    override fun shift( amount: TSize, invertDirection: Boolean ): ShiftResult<Interval<T, TSize>, TSize>
+    {
+        val sizeZero = sizeOperations.additiveIdentity
+        if ( amount == sizeZero ) return ShiftResult( this, amount )
+
+        // Clamp maximum amount to shift to min/max value which can be represented by values of T.
+        val shiftRight = if ( amount >= sizeZero ) !invertDirection else invertDirection
+        val valueZero = valueOperations.additiveIdentity
+        val (max, bound) =
+            if ( shiftRight ) Pair( operations.maxValue, upperBound )
+            else Pair( operations.minValue, lowerBound )
+        var maxSize = operations.getDistance( valueZero, max )
+        val boundSize = operations.getDistance( valueZero, bound )
+        if ( amount < sizeZero )
+        {
+            maxSize = sizeOperations.unsafeSubtract( sizeZero, maxSize )
+        }
+        val maxShift =
+            if ( (bound < valueZero && shiftRight) || (bound > valueZero && !shiftRight) )
+            {
+                sizeOperations.unsafeAdd( maxSize, boundSize )
+            }
+            else
+            {
+                sizeOperations.unsafeSubtract( maxSize, boundSize )
+            }
+        val overflows = if ( amount < sizeZero ) amount <= maxShift else amount >= maxShift
+        val toShift = if ( overflows ) maxShift else amount
+
+        // Return shifted interval.
+        val shifted = Interval(
+            operations.unsafeShift( start, toShift, invertDirection ),
+            isStartIncluded,
+            operations.unsafeShift( end, toShift, invertDirection ),
+            isEndIncluded,
+            operations
+        )
+        return ShiftResult( shifted, toShift )
+    }
+
     /**
      * Determines whether [interval] has at least one value in common with this interval.
      */
