@@ -10,7 +10,7 @@ import kotlin.test.*
  * Tests for [Interval] which creates intervals for testing using [a], which should be smaller than [b],
  * which should be smaller than [c].
  * For evenly-spaced types of [T], the distance between [a] and [b], and [b] and [c], should be greater than the spacing
- * between subsequent values in the set.
+ * between any two subsequent values in the set.
  */
 @Suppress( "FunctionName" )
 abstract class IntervalTest<T : Comparable<T>, TSize : Comparable<TSize>>(
@@ -394,6 +394,108 @@ abstract class IntervalTest<T : Comparable<T>, TSize : Comparable<TSize>>(
         val expected = createClosedInterval( a, c )
         assertEquals( expected, ab + bNextC )
         assertEquals( expected, bNextC + ab )
+    }
+
+    @Test
+    fun shift_succeeds()
+    {
+        val bcIntervals = createAllInclusionTypeIntervals( b, c )
+        val shiftSize = abSize
+        val expectedShiftSize: T = valueOperations.unsafeSubtract( b, a )
+
+        for ( bc in bcIntervals )
+        {
+            val shifted = bc.shift( shiftSize )
+            val expectedInterval = createInterval(
+                valueOperations.unsafeAdd( b, expectedShiftSize ),
+                bc.isStartIncluded,
+                valueOperations.unsafeAdd( c, expectedShiftSize ),
+                bc.isEndIncluded
+            )
+            assertEquals( expectedInterval, shifted.shiftedInterval )
+            assertEquals( shiftSize, shifted.offsetAmount )
+            assertEquals( bc.size, shifted.shiftedInterval.size )
+        }
+    }
+
+    @Test
+    fun shift_using_invertedDirection_succeeds()
+    {
+        val bcIntervals = createAllInclusionTypeIntervals( b, c )
+        val shiftSize = abSize
+        val expectedShiftSize: T = valueOperations.unsafeSubtract( b, a )
+
+        for ( bc in bcIntervals )
+        {
+            val shifted = bc.shift( shiftSize, invertDirection = true )
+            val expectedInterval = createInterval(
+                a,
+                bc.isStartIncluded,
+                valueOperations.unsafeSubtract( c, expectedShiftSize ),
+                bc.isEndIncluded
+            )
+            assertEquals( expectedInterval, shifted.shiftedInterval )
+            assertEquals( shiftSize, shifted.offsetAmount )
+            assertEquals( bc.size, shifted.shiftedInterval.size )
+        }
+    }
+
+    @Test
+    fun shift_negative_amount_equals_shift_positive_amount_using_invertedDirection()
+    {
+        if ( !sizeOperations.isSignedType ) return
+
+        val bc = createClosedInterval( b, c )
+        val abSizeNegative = sizeOperations.unsafeSubtract( sizeOperations.additiveIdentity, abSize )
+        val shiftNegative = bc.shift( abSizeNegative )
+
+        val shiftPositive = bc.shift( abSize, invertDirection = true )
+        assertEquals( shiftPositive.shiftedInterval, shiftNegative.shiftedInterval )
+        assertEquals( abSizeNegative, shiftNegative.offsetAmount )
+    }
+
+    @Test
+    fun shift_by_zero_returns_same_interval()
+    {
+        val toShift = createAllInclusionTypeIntervals( a, b )
+        for ( original in toShift )
+        {
+            val zero = sizeOperations.additiveIdentity
+
+            val shiftResult = original.shift( zero )
+            assertSame( original, shiftResult.shiftedInterval )
+
+            val shiftResultInverted = original.shift( zero, invertDirection = true )
+            assertSame( original, shiftResultInverted.shiftedInterval )
+        }
+    }
+
+    @Test
+    fun shift_with_overflow_shifts_up_to_maximum_value()
+    {
+        val bottomHalf = createClosedInterval( operations.minValue, valueOperations.additiveIdentity )
+        val maxRange = operations.getDistance( operations.minValue, operations.maxValue )
+
+        val shifted = bottomHalf.shift( maxRange )
+
+        assertEquals( operations.maxValue, shifted.shiftedInterval.upperBound )
+        assertEquals( bottomHalf.size, shifted.shiftedInterval.size )
+        val expectedShift = sizeOperations.unsafeSubtract( maxRange, bottomHalf.size )
+        assertEquals( expectedShift, shifted.offsetAmount )
+    }
+
+    @Test
+    fun shift_using_invertedDirection_with_overflow_shifts_down_to_minimum_value()
+    {
+        val upperHalf = createClosedInterval( valueOperations.additiveIdentity, operations.maxValue )
+        val maxRange = operations.getDistance( operations.minValue, operations.maxValue )
+
+        val shifted = upperHalf.shift( maxRange, invertDirection = true )
+
+        assertEquals( operations.minValue, shifted.shiftedInterval.lowerBound )
+        assertEquals( upperHalf.size, shifted.shiftedInterval.size )
+        val expectedShift = sizeOperations.unsafeSubtract( maxRange, upperHalf.size )
+        assertEquals( expectedShift, shifted.offsetAmount )
     }
 
     @Test
