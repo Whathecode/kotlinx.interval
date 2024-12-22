@@ -10,7 +10,16 @@ on:
 
 jobs:
   unit-tests-pass:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - test: jvmTest jsTest linuxX64Test
+            os: ubuntu-latest
+          - test: macosX64Test macosArm64Test iosSimulatorArm64Test iosX64Test
+            os: macos-latest
+          - test: mingwX64Test
+            os: windows-latest
+    runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -19,4 +28,4 @@ jobs:
         uses: gradle/wrapper-validation-action@v1.0.4
 
       - name: Build and test
-        run: ./gradlew check
+        run: ./gradlew ${{ matrix.test }}
