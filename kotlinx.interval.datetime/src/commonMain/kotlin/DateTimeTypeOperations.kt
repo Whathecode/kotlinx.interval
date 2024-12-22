@@ -29,7 +29,7 @@ internal object DurationOperations : TypeOperations<Duration>
 {
     override val additiveIdentity: Duration = Duration.ZERO
 
-    private const val MAX_MILLIS = Long.MAX_VALUE / 2
+    internal const val MAX_MILLIS = Long.MAX_VALUE / 2
     override val minValue: Duration = -MAX_MILLIS.milliseconds
     override val maxValue: Duration = MAX_MILLIS.milliseconds
     override val spacing: Duration? = null

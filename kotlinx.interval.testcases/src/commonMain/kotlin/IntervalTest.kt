@@ -66,6 +66,23 @@ abstract class IntervalTest<T : Comparable<T>, TSize : Comparable<TSize>>(
     }
 
     @Test
+    fun has_valid_type_operations()
+    {
+        // Minimum allowed value of T can be converted back and forth using TSize.
+        val min: T = operations.minValue
+        val minSize: TSize = operations.getDistanceTo( min )
+        val minSizeValue: T = operations.unsafeValueAt( minSize )
+        val subtractedMinSize: T = valueOperations.unsafeSubtract( valueOperations.additiveIdentity, minSizeValue )
+        assertEquals( min, subtractedMinSize )
+
+        // Maximum allowed value of T can be converted back and forth using TSize.
+        val max: T = operations.maxValue
+        val maxSize: TSize = operations.getDistanceTo( max )
+        val maxSizeValue: T = operations.unsafeValueAt( maxSize )
+        assertEquals( max, maxSizeValue )
+    }
+
+    @Test
     fun constructing_open_or_half_open_intervals_with_same_start_and_end_fails()
     {
         assertFailsWith<IllegalArgumentException> { createOpenInterval( a, a ) }
@@ -147,10 +164,10 @@ abstract class IntervalTest<T : Comparable<T>, TSize : Comparable<TSize>>(
     @Test
     fun size_can_be_greater_than_max_value()
     {
-        val fullRange = createClosedInterval( valueOperations.minValue, valueOperations.maxValue ).size
+        val fullRange = createClosedInterval( operations.minValue, operations.maxValue ).size
         val identity = valueOperations.additiveIdentity
-        val rangeBelowIdentity = createClosedInterval( valueOperations.minValue, identity ).size
-        val rangeAboveIdentity = createClosedInterval( identity, valueOperations.maxValue ).size
+        val rangeBelowIdentity = createClosedInterval( operations.minValue, identity ).size
+        val rangeAboveIdentity = createClosedInterval( identity, operations.maxValue ).size
 
         assertEquals(
             fullRange,
