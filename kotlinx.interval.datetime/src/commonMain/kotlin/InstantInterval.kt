@@ -19,7 +19,7 @@ class InstantInterval( start: Instant, isStartIncluded: Boolean, end: Instant, i
         internal val Operations = object : IntervalTypeOperations<Instant, Duration>(
             InstantOperations,
             DurationOperations,
-            getDistanceTo = { (InstantOperations.additiveIdentity - it).absoluteValue },
+            getDistance = { a, b -> (b - a).absoluteValue },
             unsafeValueAt = { InstantOperations.additiveIdentity + it.absoluteValue }
         )
         {
