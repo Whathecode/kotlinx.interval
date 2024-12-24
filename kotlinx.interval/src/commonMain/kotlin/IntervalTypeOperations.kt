@@ -15,9 +15,9 @@ abstract class IntervalTypeOperations<T : Comparable<T>, TSize : Comparable<TSiz
      */
     val sizeOperations: TypeOperations<TSize>,
     /**
-     * Return the distance from a specified value [T] to the additive identity (usually "zero") of [T].
+     * Return the distance between two values of [T].
      */
-    val getDistanceTo: (T) -> TSize,
+    val getDistance: (T, T) -> TSize,
     /**
      * Returns the positive value [T] at the specified distance from the additive identity (usually "zero") of [T].
      * This isn't safeguarded against overflows in case the value is larger than the maximum value of [T].
@@ -55,15 +55,15 @@ inline fun <reified T : Comparable<T>, reified TSize : Comparable<TSize>> create
      */
     sizeOperations: TypeOperations<TSize> = getBasicTypeOperationsFor(),
     /**
-     * A function returning the distance from a specified value [T] to the additive identity (usually "zero") of [T].
+     * A function returning the distance between values of [T].
      */
-    noinline getDistanceTo: (T) -> TSize,
+    noinline getDistance: (T, T) -> TSize,
     /**
      * A function returning the value [T] at the specified distance from the additive identity (usually "zero") of [T],
      * not safeguarded against overflows in case the value is larger than the maximum value of [T].
      */
     noinline unsafeValueAt: (TSize) -> T
-) = object : IntervalTypeOperations<T, TSize>( valueOperations, sizeOperations, getDistanceTo, unsafeValueAt )
+) = object : IntervalTypeOperations<T, TSize>( valueOperations, sizeOperations, getDistance, unsafeValueAt )
 {
     override val minValue: T = valueOperations.minValue
     override val maxValue: T = valueOperations.maxValue

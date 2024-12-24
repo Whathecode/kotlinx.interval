@@ -77,23 +77,7 @@ open class Interval<T : Comparable<T>, TSize : Comparable<TSize>>(
     /**
      * The absolute difference between [start] and [end].
      */
-    val size: TSize get()
-    {
-        val zero = valueOperations.additiveIdentity
-        val startDistance = operations.getDistanceTo( start )
-        val endDistance = operations.getDistanceTo( end )
-        val valuesHaveOppositeSign = start <= zero != end <= zero
-
-        return if ( valuesHaveOppositeSign )
-        {
-            sizeOperations.unsafeAdd( startDistance, endDistance )
-        }
-        else
-        {
-            if ( startDistance < endDistance ) sizeOperations.unsafeSubtract( endDistance, startDistance )
-            else sizeOperations.unsafeSubtract( startDistance, endDistance )
-        }
-    }
+    val size: TSize get() = operations.getDistance( start, end )
 
 
     override fun iterator(): Iterator<Interval<T, TSize>> = listOf( this ).iterator()
