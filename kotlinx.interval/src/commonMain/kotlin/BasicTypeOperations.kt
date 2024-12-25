@@ -83,8 +83,8 @@ internal object LongOperations : TypeOperations<Long>
 internal object FloatOperations : TypeOperations<Float>
 {
     override val additiveIdentity: Float = 0f
-    override val minValue: Float = -Float.MAX_VALUE
-    override val maxValue: Float = Float.MAX_VALUE
+    override val minValue: Float = Float.NEGATIVE_INFINITY
+    override val maxValue: Float = Float.POSITIVE_INFINITY
     override val spacing: Float? = null
 
     override fun unsafeAdd( a: Float, b: Float ): Float = a + b
@@ -94,8 +94,8 @@ internal object FloatOperations : TypeOperations<Float>
 internal object DoubleOperations : TypeOperations<Double>
 {
     override val additiveIdentity: Double = 0.0
-    override val minValue: Double = -Double.MAX_VALUE
-    override val maxValue: Double = Double.MAX_VALUE
+    override val minValue: Double = Double.NEGATIVE_INFINITY
+    override val maxValue: Double = Double.POSITIVE_INFINITY
     override val spacing: Double? = null
 
     override fun unsafeAdd( a: Double, b: Double ): Double = a + b

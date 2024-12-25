@@ -114,10 +114,17 @@ class FloatInterval( start: Float, isStartIncluded: Boolean, end: Float, isEndIn
 {
     companion object
     {
-        internal val Operations = createIntervalTypeOperations<Float, Double>(
+        internal val Operations = object : IntervalTypeOperations<Float, Double>(
+            FloatOperations,
+            DoubleOperations,
             getDistance = { a, b -> (b.toDouble() - a.toDouble()).absoluteValue },
             unsafeValueAt = { it.absoluteValue.toFloat() }
         )
+        {
+            private val MAX = Float.MAX_VALUE / 2
+            override val minValue: Float = -MAX
+            override val maxValue: Float = MAX
+        }
     }
 }
 
@@ -132,18 +139,23 @@ fun interval( start: Float, end: Float, isStartIncluded: Boolean = true, isEndIn
 /**
  * An [Interval] representing the set of all [Double] values lying between a provided [start] and [end] value.
  * The interval can be closed, open, or half-open, as determined by [isStartIncluded] and [isEndIncluded].
- *
- * The [size] of [Double] intervals which exceed [Double.MAX_VALUE] will be [Double.POSITIVE_INFINITY].
  */
 class DoubleInterval( start: Double, isStartIncluded: Boolean, end: Double, isEndIncluded: Boolean )
     : Interval<Double, Double>( start, isStartIncluded, end, isEndIncluded, Operations )
 {
     companion object
     {
-        internal val Operations = createIntervalTypeOperations<Double, Double>(
+        internal val Operations = object : IntervalTypeOperations<Double, Double>(
+            DoubleOperations,
+            DoubleOperations,
             getDistance = { a, b -> (b - a).absoluteValue },
             unsafeValueAt = { it.absoluteValue }
         )
+        {
+            private val MAX = Double.MAX_VALUE / 2
+            override val minValue: Double = -MAX
+            override val maxValue: Double = MAX
+        }
     }
 }
 

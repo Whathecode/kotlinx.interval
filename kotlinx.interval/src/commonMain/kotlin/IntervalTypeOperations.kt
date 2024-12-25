@@ -34,6 +34,65 @@ abstract class IntervalTypeOperations<T : Comparable<T>, TSize : Comparable<TSiz
      * The maximum allowed value of [T] to ensure that the interval size can still be represented by [TSize].
      */
     abstract val maxValue: T
+
+    
+    /**
+     * Returns a new value offset by the specified [amount] from the given [value].
+     * This isn't safeguarded against overflows in case the resulting value goes out of bounds of [T].
+     *
+     * @param invertDirection Inverts the direction by which the value is shifted. I.e., if [amount] is positive,
+     *   shift left instead of shift right, and vice verse. This can be used to shift values of unsigned types,
+     *   which can't represent a negative [amount], left.
+     * @throws IllegalArgumentException if [amount] represents an infinite value; no meaningful value can be returned.
+     */
+    fun unsafeShift( value: T, amount: TSize, invertDirection: Boolean ): T
+    {
+        val sizeZero = sizeOperations.additiveIdentity
+        val minSize =
+            if ( sizeOperations.isSignedType )
+            {
+                sizeOperations.unsafeSubtract( sizeZero, getDistance( valueOperations.additiveIdentity, minValue ) )
+            }
+            else { sizeOperations.additiveIdentity }
+        val maxSize = getDistance( valueOperations.additiveIdentity, maxValue )
+
+        var toShift = amount
+        var curValue = value
+        while ( true )
+        {
+            val prevShift = toShift
+
+            if ( toShift > maxSize )
+            {
+                toShift = sizeOperations.unsafeSubtract( toShift, maxSize )
+                curValue =
+                    if ( invertDirection ) valueOperations.unsafeSubtract( curValue, maxValue )
+                    else valueOperations.unsafeAdd( curValue, maxValue )
+            }
+            else if ( toShift < minSize )
+            {
+                toShift = sizeOperations.unsafeSubtract( toShift, minSize )
+                curValue =
+                    if ( invertDirection ) valueOperations.unsafeSubtract( curValue, minValue )
+                    else valueOperations.unsafeAdd( curValue, minValue )
+            }
+            else
+            {
+                val shiftRight = if ( toShift >= sizeZero ) !invertDirection else invertDirection
+                val shiftAbs = unsafeValueAt( toShift )
+                curValue =
+                    if ( shiftRight ) valueOperations.unsafeAdd( curValue, shiftAbs )
+                    else valueOperations.unsafeSubtract( curValue, shiftAbs )
+                break;
+            }
+
+            // If the amount to shift isn't reduced after one iteration, it must be coerced to an "infinity" value.
+            // This makes this an infinite operation with no meaningful output.
+            require( toShift != prevShift ) { "The passed amount to shift is not allowed to be infinite." }
+        }
+
+        return curValue
+    }
 }
 
 
