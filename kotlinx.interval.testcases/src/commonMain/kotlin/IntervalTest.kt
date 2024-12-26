@@ -18,14 +18,14 @@ abstract class IntervalTest<T : Comparable<T>, TSize : Comparable<TSize>>(
     private val b: T,
     private val c: T,
     /**
-     * Expected size of the interval between [a] and [b].
+     * Expected size of the interval between [a] and [b]. Should be positive.
      */
     private val abSize: TSize,
     /**
      * Provide access to the predefined set of operators of [T] and [TSize] and conversions between them.
      */
     private val operations: IntervalTypeOperations<T, TSize>
-) : IntervalTypeOperationsTest<T, TSize>( operations )
+) : IntervalTypeOperationsTest<T, TSize>( operations, abSize )
 {
     private val valueOperations = operations.valueOperations
     private val sizeOperations = operations.sizeOperations
@@ -55,6 +55,7 @@ abstract class IntervalTest<T : Comparable<T>, TSize : Comparable<TSize>>(
     fun is_correct_test_configuration()
     {
         assertTrue( a < b && b < c )
+        assertTrue( abSize > sizeOperations.additiveIdentity )
 
         // For evenly-spaced types, the distance between a-b, and b-c, should be greater than the spacing.
         val spacing = valueOperations.spacing

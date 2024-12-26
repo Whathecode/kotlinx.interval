@@ -38,4 +38,10 @@ interface TypeOperations<T : Comparable<T>>
      * The resulting type is cast back to type [T].
      */
     fun unsafeSubtract( a: T, b: T ): T
+
+
+    /**
+     * Determines whether this type can represent negative values.
+     */
+    val isSignedType: Boolean get() = minValue < additiveIdentity
 }

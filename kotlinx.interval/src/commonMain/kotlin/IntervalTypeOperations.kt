@@ -19,7 +19,7 @@ abstract class IntervalTypeOperations<T : Comparable<T>, TSize : Comparable<TSiz
      */
     val getDistanceTo: (T) -> TSize,
     /**
-     * Returns the value [T] at the specified distance from the additive identity (usually "zero") of [T].
+     * Returns the positive value [T] at the specified distance from the additive identity (usually "zero") of [T].
      * This isn't safeguarded against overflows in case the value is larger than the maximum value of [T].
      */
     val unsafeValueAt: (TSize) -> T
