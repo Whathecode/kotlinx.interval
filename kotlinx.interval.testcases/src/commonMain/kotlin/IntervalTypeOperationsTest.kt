@@ -9,7 +9,8 @@ import kotlin.test.*
  */
 @Suppress( "FunctionName" )
 open class IntervalTypeOperationsTest<T : Comparable<T>, TSize : Comparable<TSize>>(
-    private val operations: IntervalTypeOperations<T, TSize>
+    private val operations: IntervalTypeOperations<T, TSize>,
+    private val positiveSize: TSize
 )
 {
     private val valueOperations = operations.valueOperations
@@ -33,5 +34,21 @@ open class IntervalTypeOperationsTest<T : Comparable<T>, TSize : Comparable<TSiz
         val maxSize: TSize = operations.getDistanceTo( max )
         val maxSizeValue: T = operations.unsafeValueAt( maxSize )
         assertEquals( max, maxSizeValue )
+    }
+
+    @Test
+    fun unsafeValueAt_is_always_positive()
+    {
+        val zero = valueOperations.additiveIdentity
+
+        val valueAtPositive = operations.unsafeValueAt( positiveSize )
+        assertTrue( valueAtPositive > zero, "$valueAtPositive isn't > $zero." )
+
+        if ( sizeOperations.isSignedType )
+        {
+            val negativeSize = sizeOperations.unsafeSubtract( sizeOperations.additiveIdentity, positiveSize )
+            val valueAtNegative = operations.unsafeValueAt( negativeSize )
+            assertTrue( valueAtNegative > zero, "$valueAtNegative isn't > $zero." )
+        }
     }
 }

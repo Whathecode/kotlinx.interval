@@ -5,8 +5,6 @@ import io.github.whathecode.kotlinx.interval.IntervalTypeOperations
 import kotlinx.datetime.Instant
 import kotlin.math.absoluteValue
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.nanoseconds
-import kotlin.time.Duration.Companion.seconds
 
 
 /**
@@ -22,7 +20,7 @@ class InstantInterval( start: Instant, isStartIncluded: Boolean, end: Instant, i
             InstantOperations,
             DurationOperations,
             getDistanceTo = { (InstantOperations.additiveIdentity - it).absoluteValue },
-            unsafeValueAt = { InstantOperations.additiveIdentity + it }
+            unsafeValueAt = { InstantOperations.additiveIdentity + it.absoluteValue }
         )
         {
             // Maximum positive/negative value to ensure the interval size can be represented by Duration.

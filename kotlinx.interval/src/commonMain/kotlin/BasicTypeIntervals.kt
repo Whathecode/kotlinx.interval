@@ -126,7 +126,7 @@ class FloatInterval( start: Float, isStartIncluded: Boolean, end: Float, isEndIn
     {
         internal val Operations = createIntervalTypeOperations<Float, Double>(
             getDistanceTo = { it.absoluteValue.toDouble() },
-            unsafeValueAt = { it.toFloat() }
+            unsafeValueAt = { it.absoluteValue.toFloat() }
         )
     }
 }
@@ -152,7 +152,7 @@ class DoubleInterval( start: Double, isStartIncluded: Boolean, end: Double, isEn
     {
         internal val Operations = createIntervalTypeOperations<Double, Double>(
             getDistanceTo = { it.absoluteValue },
-            unsafeValueAt = { it }
+            unsafeValueAt = { it.absoluteValue }
         )
     }
 }
