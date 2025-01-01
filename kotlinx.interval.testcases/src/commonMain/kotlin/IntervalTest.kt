@@ -25,7 +25,7 @@ abstract class IntervalTest<T : Comparable<T>, TSize : Comparable<TSize>>(
      * Provide access to the predefined set of operators of [T] and [TSize] and conversions between them.
      */
     private val operations: IntervalTypeOperations<T, TSize>
-)
+) : IntervalTypeOperationsTest<T, TSize>( operations )
 {
     private val valueOperations = operations.valueOperations
     private val sizeOperations = operations.sizeOperations
@@ -64,23 +64,6 @@ abstract class IntervalTest<T : Comparable<T>, TSize : Comparable<TSize>>(
             val bcSize = valueOperations.unsafeSubtract( c, b )
             assertTrue( abSize > spacing && bcSize > spacing )
         }
-    }
-
-    @Test
-    fun has_valid_type_operations()
-    {
-        // Minimum allowed value of T can be converted back and forth using TSize.
-        val min: T = operations.minValue
-        val minSize: TSize = operations.getDistanceTo( min )
-        val minSizeValue: T = operations.unsafeValueAt( minSize )
-        val subtractedMinSize: T = valueOperations.unsafeSubtract( valueOperations.additiveIdentity, minSizeValue )
-        assertEquals( min, subtractedMinSize )
-
-        // Maximum allowed value of T can be converted back and forth using TSize.
-        val max: T = operations.maxValue
-        val maxSize: TSize = operations.getDistanceTo( max )
-        val maxSizeValue: T = operations.unsafeValueAt( maxSize )
-        assertEquals( max, maxSizeValue )
     }
 
     @Test
