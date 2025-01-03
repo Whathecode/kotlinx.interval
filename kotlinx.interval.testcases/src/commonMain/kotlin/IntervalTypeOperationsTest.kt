@@ -37,6 +37,19 @@ open class IntervalTypeOperationsTest<T : Comparable<T>, TSize : Comparable<TSiz
     }
 
     @Test
+    fun TSize_can_represent_full_range()
+    {
+        val rangeBelowZero = operations.getDistance( operations.minValue, valueZero )
+        val rangeAboveZero = operations.getDistance( valueZero, operations.maxValue )
+        val fullRange = operations.getDistance( operations.minValue, operations.maxValue )
+
+        assertEquals(
+            fullRange,
+            sizeOperations.unsafeAdd( rangeBelowZero, rangeAboveZero )
+        )
+    }
+
+    @Test
     fun getDistance_is_commutative()
     {
         val value = operations.unsafeValueAt( positiveSize )
