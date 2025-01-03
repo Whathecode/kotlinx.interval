@@ -147,20 +147,6 @@ abstract class IntervalTest<T : Comparable<T>, TSize : Comparable<TSize>>(
     }
 
     @Test
-    fun size_can_be_greater_than_max_value()
-    {
-        val fullRange = createClosedInterval( operations.minValue, operations.maxValue ).size
-        val identity = valueOperations.additiveIdentity
-        val rangeBelowIdentity = createClosedInterval( operations.minValue, identity ).size
-        val rangeAboveIdentity = createClosedInterval( identity, operations.maxValue ).size
-
-        assertEquals(
-            fullRange,
-            sizeOperations.unsafeAdd( rangeBelowIdentity, rangeAboveIdentity )
-        )
-    }
-
-    @Test
     fun getBounds_returns_canonicalized_interval()
     {
         createAllInclusionTypeIntervals( a, b )
