@@ -50,6 +50,20 @@ sealed interface IntervalUnion<T : Comparable<T>, TSize : Comparable<TSize>> : I
     fun shift( amount: TSize, invertDirection: Boolean = false ): ShiftResult<IntervalUnion<T, TSize>, TSize>
 
     /**
+     * Returns an [IntervalUnion] offset to the right from this interval union by the specified [amount],
+     * or as much as possible before the minimum or maximum value that can be represented by [T] is reached.
+     * Use [shift] in case you want to verify whether the interval could be offset the full [amount].
+     */
+    infix fun shr( amount: TSize ): IntervalUnion<T, TSize> = shift( amount ).shiftedInterval
+
+    /**
+     * Returns an [IntervalUnion] offset to the left from this interval union by the specified [amount],
+     * or as much as possible before the minimum or maximum value that can be represented by [T] is reached.
+     * Use [shift] in case you want to verify whether the interval could be offset the full [amount].
+     */
+    infix fun shl( amount: TSize ): IntervalUnion<T, TSize> = shift( amount, invertDirection = true ).shiftedInterval
+
+    /**
      * Determines whether [interval] has at least one value in common with this set.
      */
     fun intersects( interval: Interval<T, TSize> ): Boolean
