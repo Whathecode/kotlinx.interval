@@ -80,6 +80,32 @@ open class Interval<T : Comparable<T>, TSize : Comparable<TSize>>(
     val size: TSize get() = operations.getDistance( start, end )
 
 
+    /**
+     * Safe initialization of a calculated interval in case loss of precision can cause invalid initialization.
+     * I.e., coerce values to the minimum and maximum allowed values, and collapse the interval to a single value in
+     * case its size is zero.
+     */
+    private fun safeInterval(
+        start: T,
+        isStartIncluded: Boolean,
+        end: T,
+        isEndIncluded: Boolean
+    ): Interval<T, TSize>
+    {
+        val coercedStart = coerceMinMax( start )
+        val coercedEnd = coerceMinMax( end )
+
+        val interval =
+            if ( coercedStart == coercedEnd ) Interval( coercedStart, true, coercedEnd, true, operations )
+            else Interval( coercedStart, isStartIncluded, coercedEnd, isEndIncluded, operations )
+        return interval
+    }
+
+    private fun coerceMinMax( value: T ) =
+        if ( value > operations.maxValue ) operations.maxValue
+        else if ( value < operations.minValue ) operations.minValue
+        else value
+
     override fun iterator(): Iterator<Interval<T, TSize>> = listOf( this ).iterator()
 
     override fun getBounds(): Interval<T, TSize> = this.canonicalize()
@@ -190,13 +216,9 @@ open class Interval<T : Comparable<T>, TSize : Comparable<TSize>>(
         val toShift = if ( overflows ) maxShift else amount
 
         // Return shifted interval.
-        val shifted = Interval(
-            operations.unsafeShift( start, toShift, invertDirection ),
-            isStartIncluded,
-            operations.unsafeShift( end, toShift, invertDirection ),
-            isEndIncluded,
-            operations
-        )
+        val shiftedStart = operations.unsafeShift( start, toShift, invertDirection )
+        val shiftedEnd = operations.unsafeShift( end, toShift, invertDirection )
+        val shifted = safeInterval( shiftedStart, isStartIncluded, shiftedEnd, isEndIncluded )
         return ShiftResult( shifted, toShift )
     }
 

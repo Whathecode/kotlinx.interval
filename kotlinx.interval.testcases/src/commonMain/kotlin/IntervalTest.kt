@@ -11,6 +11,8 @@ import kotlin.test.*
  * which should be smaller than [c].
  * For evenly-spaced types of [T], the distance between [a] and [b], and [b] and [c], should be greater than the spacing
  * between any two subsequent values in the set.
+ * For non-evenly-spaced types, the distance between [a] and [b] should be small enough so that there isn't sufficient
+ * precision to represent them as individual values when shifted close to the max possible values represented by [T].
  */
 @Suppress( "FunctionName" )
 abstract class IntervalTest<T : Comparable<T>, TSize : Comparable<TSize>>(
@@ -496,6 +498,20 @@ abstract class IntervalTest<T : Comparable<T>, TSize : Comparable<TSize>>(
         assertEquals( upperHalf.size, shifted.shiftedInterval.size )
         val expectedShift = sizeOperations.unsafeSubtract( maxRange, upperHalf.size )
         assertEquals( expectedShift, shifted.offsetAmount )
+    }
+
+    @Test
+    fun shift_tiny_intervals_long_distances_for_value_types_with_lossy_precision()
+    {
+        if ( valueOperations.spacing != null ) return // Evenly-spaced types don't lose precision.
+
+        val tinyInterval = createOpenInterval( a, b )
+        val shifted = tinyInterval.shift( sizeOperations.maxValue )
+
+        // Due to loss of precision, there is no more distinction between `a` and `b` after shifting, resulting in an
+        // interval with `size` 0. This causes the interval to "collapse" into a single value, represented as a closed
+        // interval.
+        assertTrue( shifted.shiftedInterval.isClosedInterval )
     }
 
     @Test
