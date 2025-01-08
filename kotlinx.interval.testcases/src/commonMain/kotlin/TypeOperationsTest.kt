@@ -62,4 +62,52 @@ abstract class TypeOperationsTest<T : Comparable<T>>(
         val result = typeOperations.unsafeSubtract( a, a )
         assertEquals( typeOperations.additiveIdentity, result )
     }
+
+    @Test
+    fun toDouble_fromDouble_roundtrip_returns_same_value()
+    {
+        val original = a
+
+        val toDouble = typeOperations.toDouble( original )
+        val fromDouble = typeOperations.fromDouble( toDouble )
+
+        assertEquals( original, fromDouble )
+    }
+
+    @Test
+    fun toDouble_fromDouble_roundtrip_for_maxima()
+    {
+        val maxima = listOf( typeOperations.minValue, typeOperations.maxValue )
+        maxima.forEach {
+            val toDouble = typeOperations.toDouble( it )
+            val fromDouble = typeOperations.fromDouble( toDouble )
+            assertEquals( it, fromDouble )
+        }
+    }
+
+    @Test
+    fun fromDouble_overflows_past_max()
+    {
+        val max = typeOperations.maxValue
+        val maxDouble = typeOperations.toDouble( max )
+        val pastMaxDouble = maxDouble + 1.0
+
+        val overflowMax = typeOperations.fromDouble( pastMaxDouble )
+
+        // Types either overflow, or are coerced to max value (e.g. floating points).
+        if ( overflowMax != max ) assertEquals( typeOperations.minValue, overflowMax )
+    }
+
+    @Test
+    fun fromDouble_overflows_past_min()
+    {
+        val min = typeOperations.minValue
+        val minDouble = typeOperations.toDouble( min )
+        val pastMinDouble = minDouble - 1.0
+
+        val overflowMin = typeOperations.fromDouble( pastMinDouble )
+
+        // Types either overflow, or are coerced to min value (e.g. floating points).
+        if ( overflowMin != min ) assertEquals( typeOperations.maxValue, overflowMin )
+    }
 }
