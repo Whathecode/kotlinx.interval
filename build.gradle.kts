@@ -22,6 +22,13 @@ if (publishPropertiesFile.exists()) {
 }
 group = "io.github.whathecode.kotlinx.interval"
 version = "2.0.0"
+if (properties.containsKey("snapshot"))
+{
+    val versionSplit = version.toString().split("-")
+    val snapshotVersion = "${versionSplit[0]}-SNAPSHOT"
+    version = snapshotVersion
+    rootProject.subprojects.forEach { it.version = snapshotVersion }
+}
 nexusPublishing {
     repositories {
         sonatype {
@@ -30,14 +37,5 @@ nexusPublishing {
             username.set(publishProperties["repository.username"] as? String)
             password.set(publishProperties["repository.password"] as? String)
         }
-    }
-}
-val setSnapshotVersion: Task by tasks.creating {
-    doFirst {
-        val versionSplit = version.toString().split("-")
-        val snapshotVersion = "${versionSplit[0]}-SNAPSHOT"
-        version = snapshotVersion
-        
-        rootProject.subprojects.forEach { it.version = snapshotVersion }
     }
 }
