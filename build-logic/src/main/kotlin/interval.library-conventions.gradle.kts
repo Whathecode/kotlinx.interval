@@ -2,7 +2,6 @@ import java.io.FileInputStream
 import java.util.Properties
 import org.jetbrains.dokka.Platform
 import org.jetbrains.dokka.gradle.DokkaTask
-import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 
@@ -20,7 +19,6 @@ repositories {
 
 kotlin {
     jvm {
-        @OptIn(ExperimentalKotlinGradlePluginApi::class)
         compilerOptions {
             jvmTarget = JvmTarget.JVM_1_8
         }
@@ -83,7 +81,7 @@ publishing {
     repositories {
         maven {
             name = "local"
-            url = uri("${layout.buildDirectory}/repo")
+            url = uri("${layout.projectDirectory}/build/repository")
         }
     }
     publications.filterIsInstance<MavenPublication>().forEach {
