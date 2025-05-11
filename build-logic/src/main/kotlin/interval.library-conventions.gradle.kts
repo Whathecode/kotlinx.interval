@@ -1,7 +1,8 @@
 import java.io.FileInputStream
 import java.util.Properties
-import org.jetbrains.dokka.Platform
-import org.jetbrains.dokka.gradle.DokkaTask
+import org.jetbrains.dokka.gradle.engine.parameters.KotlinPlatform
+import org.jetbrains.dokka.gradle.internal.InternalDokkaGradlePluginApi
+import org.jetbrains.dokka.gradle.tasks.DokkaGenerateTask
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 
@@ -55,19 +56,24 @@ kotlin {
 
 
 // Documentation.
-val dokkaJvmJavadoc by tasks.creating(DokkaTask::class) {
+dokka {
     dokkaSourceSets {
         register("jvm") {
-            platform.set(Platform.jvm)
+            analysisPlatform.set(KotlinPlatform.JVM)
             sourceRoots.from(kotlin.sourceSets.getByName("jvmMain").kotlin.srcDirs)
         }
     }
+}
+tasks.withType<DokkaGenerateTask>().configureEach {
+    // HACK: Dokka 2.0.0 exposes this debug file by default (https://github.com/Kotlin/dokka/issues/3958)
+    @OptIn( InternalDokkaGradlePluginApi::class )
+    dokkaConfigurationJsonFile.convention( null as RegularFile? )
 }
 val javadocJar by tasks.creating(Jar::class) {
     group = JavaBasePlugin.DOCUMENTATION_GROUP
     description = "Create javadoc jar using Dokka"
     archiveClassifier.set("javadoc")
-    from(dokkaJvmJavadoc)
+    from(tasks.dokkaGeneratePublicationHtml)
 }
 
 
