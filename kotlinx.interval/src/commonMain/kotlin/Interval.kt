@@ -123,6 +123,34 @@ open class Interval<T : Comparable<T>, TSize : Comparable<TSize>>(
     }
 
     /**
+     * Get the value at a given percentage within (0.0–1.0) or outside (< 0.0, > 1.0) of the interval.
+     * 0.0 corresponds to [start] and 1.0 to [end].
+     * The calculation is performed using [Double] arithmetic and the result is rounded to the to nearest value of [T].
+     *
+     * @throws ArithmeticException if the resulting value falls outside the range which can be represented by [T].
+     */
+    fun getValueAt( percentage: Double ): T
+    {
+        val normalizedPercentage = if ( isReversed ) 1.0 - percentage else percentage
+        val shiftLeft = normalizedPercentage < 0
+        val absPercentage = if ( shiftLeft ) -normalizedPercentage else normalizedPercentage
+        val addToLowerBoundDouble = sizeOperations.toDouble( size ) * absPercentage
+
+        // Throw when the resulting value can't be represented by T.
+        if ( shiftLeft || normalizedPercentage > 1 )
+        {
+            val max = if ( shiftLeft ) operations.minValue else operations.maxValue
+            val toMax = operations.getDistance( lowerBound, max )
+            val toMaxDouble = sizeOperations.toDouble( toMax )
+            if ( addToLowerBoundDouble > toMaxDouble )
+                throw ArithmeticException( "The resulting value is out of bounds for this type." )
+        }
+
+        val addToLowerBoundSize = sizeOperations.fromDouble( addToLowerBoundDouble )
+        return operations.unsafeShift( lowerBound, addToLowerBoundSize, shiftLeft )
+    }
+
+    /**
      * Return an [IntervalUnion] representing all [T] values in this interval,
      * excluding all [T] values in the specified interval [toSubtract].
      */

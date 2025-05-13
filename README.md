@@ -91,6 +91,7 @@ The following operations are specific to `Interval<T, TSize>`:
 |           `lowerBound`, `upperBound`           |                       Corresponds to `start` and `end`, but swapped if `isReversed`.                       |
 | `isLowerBoundIncluded`, `isUpperBoundIncluded` |             Corresponds to `isStartIncluded` and `isEndIncluded`, but swapped if `isReversed`.             |
 |                     `size`                     |                             The absolute difference between `start` and `end`.                             |
+|                 `getValueAt()`                 |        Get the value at a given percentage inside (0.0–1.0) or outside (< 0.0, > 1.0) the interval.        |
 |                `nonReversed()`                 |                             `reverse()` the interval in case it `isReversed`.                              |
 |                  `reverse()`                   |             Return an interval which swaps `start` with `end`, as well as boundary inclusions.             |
 |                `canonicalize()`                | Return the interval in canonical form. E.g., The canonical form of `[5, 1)` is `[2, 5]` for integer types. |

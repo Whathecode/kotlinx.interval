@@ -8,11 +8,11 @@ import kotlin.test.*
 
 /**
  * Tests for [Interval] which creates intervals for testing using [a], which should be smaller than [b],
- * which should be smaller than [c].
- * For evenly-spaced types of [T], the distance between [a] and [b], and [b] and [c], should be greater than the spacing
- * between any two subsequent values in the set.
- * For non-evenly-spaced types, the distance between [a] and [b] should be small enough so that there isn't sufficient
- * precision to represent them as individual values when shifted close to the max possible values represented by [T].
+ * which should be smaller than [c]. The distance between [a] and [b], and [b] and [c], should be equal.
+ * In addition, for evenly-spaced types of [T], this distance should be greater than the spacing between any two
+ * subsequent values in the set.
+ * And, for non-evenly-spaced types, this distance should be small enough so that there isn't sufficient precision to
+ * represent them as individual values when shifted close to the max possible values represented by [T].
  */
 @Suppress( "FunctionName" )
 abstract class IntervalTest<T : Comparable<T>, TSize : Comparable<TSize>>(
@@ -59,14 +59,14 @@ abstract class IntervalTest<T : Comparable<T>, TSize : Comparable<TSize>>(
         assertTrue( a < b && b < c )
         assertTrue( abSize > sizeOperations.additiveIdentity )
 
-        // For evenly-spaced types, the distance between a-b, and b-c, should be greater than the spacing.
+        // The distance between a-b and b-c should be equal.
+        val abSize = valueOperations.unsafeSubtract( b, a )
+        val bcSize = valueOperations.unsafeSubtract( c, b )
+        assertTrue( abSize == bcSize )
+
+        // For evenly-spaced types, the distance should be e greater than the spacing.
         val spacing = valueOperations.spacing
-        if ( spacing != null )
-        {
-            val abSize = valueOperations.unsafeSubtract( b, a )
-            val bcSize = valueOperations.unsafeSubtract( c, b )
-            assertTrue( abSize > spacing && bcSize > spacing )
-        }
+        if ( spacing != null ) assertTrue( abSize > spacing )
     }
 
     @Test
@@ -177,6 +177,82 @@ abstract class IntervalTest<T : Comparable<T>, TSize : Comparable<TSize>>(
     {
         val openIntervals = listOf( createOpenInterval( a, b ), createOpenInterval( b, a ) )
         openIntervals.forEach { assertTrue( a !in it && b !in it ) }
+    }
+
+    @Test
+    fun getValueAt_inside_interval()
+    {
+        val acIntervals = createAllInclusionTypeIntervals( a, c )
+
+        for ( ac in acIntervals )
+        {
+            assertEquals( a,ac.getValueAt( 0.0 ) )
+            assertEquals( b, ac.getValueAt( 0.5 ) )
+            assertEquals( c, ac.getValueAt( 1.0 ) )
+        }
+    }
+
+    @Test
+    fun getValueAt_outside_interval()
+    {
+        val abIntervals = createAllInclusionTypeIntervals( a, b )
+        for ( ab in abIntervals )
+        {
+            assertEquals( c, ab.getValueAt( 2.0 ) )
+        }
+
+        val bcIntervals = createAllInclusionTypeIntervals( b, c )
+        for ( bc in bcIntervals )
+        {
+            assertEquals( a, bc.getValueAt( -1.0 ) )
+        }
+    }
+
+    @Test
+    fun getValueAt_reverse_intervals()
+    {
+        val adIntervals = createAllInclusionTypeIntervals( a, d )
+
+        for ( ad in adIntervals )
+        {
+            val nonReversed = ad.getValueAt( 0.2 )
+            val reversed = ad.reverse().getValueAt( 0.8 )
+            assertEquals(
+                valueOperations.toDouble( nonReversed ),
+                valueOperations.toDouble( reversed ),
+                absoluteTolerance = 0.000000001
+            )
+        }
+    }
+
+    @Test
+    fun getValueAt_returned_value_overflows()
+    {
+        val maxIntervals = createAllInclusionTypeIntervals( operations.minValue, operations.maxValue )
+
+        for ( max in maxIntervals )
+        {
+            assertEquals( max.start, max.getValueAt( 0.0 ) )
+            // Loss of precision for large values as part of double conversion is expected.
+            // Therefore, compare double-converted values which have the same loss of precision.
+            assertEquals(
+                valueOperations.toDouble(max.end ),
+                valueOperations.toDouble( max.getValueAt( 1.0 ) )
+            )
+            assertFailsWith<ArithmeticException> { max.getValueAt( -0.1 ) }
+            assertFailsWith<ArithmeticException> { max.getValueAt( 1.1 ) }
+        }
+    }
+
+    @Test
+    fun getValueAt_percentage_overflows()
+    {
+        val ab = createClosedInterval( a, b )
+
+        val maxPercentage = sizeOperations.toDouble( sizeOperations.maxValue ) / sizeOperations.toDouble( ab.size )
+        val tooBigPercentage = maxPercentage * 2
+
+        assertFailsWith<ArithmeticException> { ab.getValueAt( tooBigPercentage ) }
     }
 
     @Test
