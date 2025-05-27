@@ -86,6 +86,24 @@ abstract class TypeOperationsTest<T : Comparable<T>>(
     }
 
     @Test
+    fun fromDouble_rounds_to_nearest_value()
+    {
+        // Rounding only needed for evenly-spaced types.
+        val spacing = typeOperations.spacing
+        if ( spacing == null ) return
+
+        val next = typeOperations.unsafeAdd( a, spacing )
+        val aDouble = typeOperations.toDouble( a )
+        val nextDouble = typeOperations.toDouble( next )
+        val oneThird = (nextDouble - aDouble) / 3
+        val closerToA = aDouble + oneThird
+        val closerToNext = nextDouble - oneThird
+
+        assertEquals( a, typeOperations.fromDouble( closerToA ) )
+        assertEquals( next, typeOperations.fromDouble( closerToNext ) )
+    }
+
+    @Test
     fun fromDouble_overflows_past_max()
     {
         val max = typeOperations.maxValue
