@@ -160,7 +160,11 @@ internal object UIntOperations : TypeOperations<UInt>
     override fun unsafeAdd( a: UInt, b: UInt ): UInt = a + b
     override fun unsafeSubtract( a: UInt, b: UInt ): UInt = a - b
 
-    override fun fromDouble( double: Double ): UInt = double.toUInt()
+    override fun fromDouble( double: Double ): UInt
+    {
+        val uInt = double.toUInt()
+        return if ( double - uInt.toDouble() >= 0.5 ) uInt + 1.toUInt() else uInt
+    }
     override fun toDouble( value: UInt ): Double = value.toDouble()
 }
 
@@ -174,7 +178,11 @@ internal object ULongOperations : TypeOperations<ULong>
     override fun unsafeAdd( a: ULong, b: ULong ): ULong = a + b
     override fun unsafeSubtract( a: ULong, b: ULong ): ULong = a - b
 
-    override fun fromDouble( double: Double ): ULong = double.toULong()
+    override fun fromDouble( double: Double ): ULong
+    {
+        val uLong = double.toULong()
+        return if ( double - uLong.toDouble() >= 0.5 ) uLong + 1.toULong() else uLong
+    }
     override fun toDouble( value: ULong ): Double = value.toDouble()
 }
 
