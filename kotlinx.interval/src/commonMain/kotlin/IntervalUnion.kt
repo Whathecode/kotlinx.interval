@@ -39,6 +39,31 @@ sealed interface IntervalUnion<T : Comparable<T>, TSize : Comparable<TSize>> : I
     operator fun plus( toAdd: Interval<T, TSize> ): IntervalUnion<T, TSize>
 
     /**
+     * Returns an [IntervalUnion] offset from this interval union by the specified [amount],
+     * or as much as possible before the minimum or maximum value that can be represented by [T] is reached.
+     * In case the interval couldn't be offset the full [amount], the final [ShiftResult.offsetAmount] will differ.
+     *
+     * @param invertDirection Inverts the direction by which the interval is offset. I.e., if [amount] is positive,
+     *   shift left instead of shift right, and vice verse. This can be used to shift intervals with unsigned types,
+     *   which can't represent a negative [amount], left.
+     */
+    fun shift( amount: TSize, invertDirection: Boolean = false ): ShiftResult<IntervalUnion<T, TSize>, TSize>
+
+    /**
+     * Returns an [IntervalUnion] offset to the right from this interval union by the specified [amount],
+     * or as much as possible before the minimum or maximum value that can be represented by [T] is reached.
+     * Use [shift] in case you want to verify whether the interval could be offset the full [amount].
+     */
+    infix fun shr( amount: TSize ): IntervalUnion<T, TSize> = shift( amount ).shiftedInterval
+
+    /**
+     * Returns an [IntervalUnion] offset to the left from this interval union by the specified [amount],
+     * or as much as possible before the minimum or maximum value that can be represented by [T] is reached.
+     * Use [shift] in case you want to verify whether the interval could be offset the full [amount].
+     */
+    infix fun shl( amount: TSize ): IntervalUnion<T, TSize> = shift( amount, invertDirection = true ).shiftedInterval
+
+    /**
      * Determines whether [interval] has at least one value in common with this set.
      */
     fun intersects( interval: Interval<T, TSize> ): Boolean
@@ -51,27 +76,54 @@ sealed interface IntervalUnion<T : Comparable<T>, TSize : Comparable<TSize>> : I
 
 
 /**
+ * The result of an [IntervalUnion.shift] operation on an interval union of type [TInterval].
+ */
+data class ShiftResult<out TInterval : IntervalUnion<*, TSize>, TSize : Comparable<TSize>>(
+    /**
+     * A new [IntervalUnion], offset from the interval on which the [IntervalUnion.shift] operation was performed
+     * by [offsetAmount].
+     */
+    val shiftedInterval: TInterval,
+    /**
+     * The final amount by which [shiftedInterval] is offset from the interval on which the [IntervalUnion.shift]
+     * operation was performed. This may be smaller than the originally requested offset in case a larger offset would
+     * result in a value which can't be represented by values in the interval.
+     */
+    val offsetAmount: TSize
+)
+
+
+/**
  * Create an [IntervalUnion] which represents a set which contains no values.
  */
 @Suppress( "UNCHECKED_CAST" )
-internal inline fun <T : Comparable<T>, TSize : Comparable<TSize>> emptyIntervalUnion() =
-    EmptyIntervalUnion as IntervalUnion<T, TSize>
+fun <T : Comparable<T>, TSize : Comparable<TSize>> emptyIntervalUnion() = EmptyIntervalUnion as IntervalUnion<T, TSize>
 
-private data object EmptyIntervalUnion : IntervalUnion<Nothing, Nothing>
+private data object EmptyIntervalUnion : IntervalUnion<Comparable<Any>, Comparable<Any>>
 {
-    override fun getBounds(): Interval<Nothing, Nothing>? = null
+    override fun getBounds(): Interval<Comparable<Any>, Comparable<Any>>? = null
 
-    override fun contains( value: Nothing ): Boolean = false
+    override fun contains( value: Comparable<Any> ): Boolean = false
 
-    override fun minus( toSubtract: Interval<Nothing, Nothing> ): IntervalUnion<Nothing, Nothing> = this
+    override fun minus(
+        toSubtract: Interval<Comparable<Any>, Comparable<Any>>
+    ): IntervalUnion<Comparable<Any>, Comparable<Any>> = this
 
-    override fun plus( toAdd: Interval<Nothing, Nothing> ): IntervalUnion<Nothing, Nothing> = toAdd
+    override fun plus(
+        toAdd: Interval<Comparable<Any>, Comparable<Any>>
+    ): IntervalUnion<Comparable<Any>, Comparable<Any>> = toAdd
 
-    override fun intersects( interval: Interval<Nothing, Nothing> ): Boolean = false
+    override fun shift(
+        amount: Comparable<Any>,
+        invertDirection: Boolean
+    ): ShiftResult<EmptyIntervalUnion, Comparable<Any>> = ShiftResult( this, amount )
 
-    override fun setEquals( other: IntervalUnion<Nothing, Nothing> ): Boolean = other == this
+    override fun intersects( interval: Interval<Comparable<Any>, Comparable<Any>> ): Boolean = false
 
-    override fun iterator(): Iterator<Interval<Nothing, Nothing>> = emptyList<Interval<Nothing, Nothing>>().iterator()
+    override fun setEquals( other: IntervalUnion<Comparable<Any>, Comparable<Any>> ): Boolean = other == this
+
+    override fun iterator(): Iterator<Interval<Comparable<Any>, Comparable<Any>>> =
+        emptyList<Interval<Comparable<Any>, Comparable<Any>>>().iterator()
 }
 
 
@@ -111,6 +163,16 @@ private class IntervalUnionPair<T : Comparable<T>, TSize : Comparable<TSize>, TU
         unionPair.lowerBounds.start, unionPair.lowerBounds.isStartIncluded,
         unionPair.upperBounds.end, unionPair.upperBounds.isEndIncluded,
         unionPair.lowerBounds.operations )
+
+    // Retrieve type operations from any underlying interval.
+    private val operations: IntervalTypeOperations<T, TSize> = getOperations( this )
+    @Suppress( "UNCHECKED_CAST" )
+    private fun getOperations( pair: IntervalUnionPair<*, *, *> ) : IntervalTypeOperations<T, TSize> =
+        when ( pair.lower ) {
+            is Interval<*, *> -> pair.lower.operations as IntervalTypeOperations<T, TSize>
+            is IntervalUnionPair<*, *, *> -> getOperations( pair.lower )
+            else -> throw IllegalStateException( "Unexpected underlying interval type: ${pair.lower}." )
+        }
 
     override fun iterator(): Iterator<Interval<T, TSize>> =
         ( lower.asSequence() + upper.asSequence() ).iterator()
@@ -175,6 +237,36 @@ private class IntervalUnionPair<T : Comparable<T>, TSize : Comparable<TSize>, TU
         // TODO: This doesn't make use of known bounds of nested unions in `upper`, only for `lower` through recursion.
         //  This can likely be optimized.
         return upper.fold( lower + toAdd ) { result, upperInterval -> result + upperInterval }
+    }
+
+    override fun shift(
+        amount: TSize,
+        invertDirection: Boolean
+    ): ShiftResult<IntervalUnion<T, TSize>, TSize>
+    {
+        val sizeZero = operations.sizeOperations.additiveIdentity
+        val shiftRight = if ( amount >= sizeZero ) !invertDirection else invertDirection
+
+        val lowerShifted: ShiftResult<IntervalUnion<T, TSize>, TSize>
+        val upperShifted: ShiftResult<IntervalUnion<T, TSize>, TSize>
+        val coercedAmount: TSize
+        if ( shiftRight )
+        {
+            upperShifted = upper.shift( amount, invertDirection )
+            lowerShifted = lower.shift( upperShifted.offsetAmount, invertDirection )
+            coercedAmount = upperShifted.offsetAmount
+        }
+        else
+        {
+            lowerShifted = lower.shift( amount, invertDirection )
+            upperShifted = upper.shift( lowerShifted.offsetAmount, invertDirection )
+            coercedAmount = lowerShifted.offsetAmount
+        }
+
+        return ShiftResult(
+            intervalUnionPair( lowerShifted.shiftedInterval, upperShifted.shiftedInterval ),
+            coercedAmount
+        )
     }
 
     override fun intersects( interval: Interval<T, TSize> ): Boolean

@@ -14,6 +14,7 @@ class Readme
         val areIncluded = 0 in interval && 5 in interval // true
         val areExcluded = 10 !in interval && 15 !in interval // true
         val size: UInt = interval.size // 10
+        val shifted = interval shr 10u // Shifted right by 10: [10, 20)
     }
 
     @Test
@@ -22,6 +23,7 @@ class Readme
         val start = interval( 0, 100 ) // Interval: [0, 100]
         val areIncluded = 50 in start && 100 in start // true
         val splitInTwo = start - interval( 25, 85 ) // Union: [[0, 25), (85, 100]]
+        val shiftBackAndForth = splitInTwo shr 100u shl 100u // == splitInTwo
         val areExcluded = 50 !in splitInTwo && 85 !in splitInTwo // true
         val unite = splitInTwo + interval( 10, 90 ) // Interval: [0, 100]
         val backToStart = start == unite // true

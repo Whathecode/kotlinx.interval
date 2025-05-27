@@ -8,23 +8,26 @@ import kotlin.test.*
 
 /**
  * Tests for [Interval] which creates intervals for testing using [a], which should be smaller than [b],
- * which should be smaller than [c].
- * For evenly-spaced types of [T], the distance between [a] and [b], and [b] and [c], should be greater than the spacing
- * between subsequent values in the set.
+ * which should be smaller than [c]. The distance between [a] and [b], and [b] and [c], should be equal.
+ * In addition, for evenly-spaced types of [T], this distance should be greater than the spacing between any two
+ * subsequent values in the set.
+ * And, for non-evenly-spaced types, this distance should be small enough so that there isn't sufficient precision to
+ * represent them as individual values when shifted close to the max possible values represented by [T].
  */
+@Suppress( "FunctionName" )
 abstract class IntervalTest<T : Comparable<T>, TSize : Comparable<TSize>>(
     private val a: T,
     private val b: T,
     private val c: T,
     /**
-     * Expected size of the interval between [a] and [b].
+     * Expected size of the interval between [a] and [b]. Should be positive.
      */
     private val abSize: TSize,
     /**
      * Provide access to the predefined set of operators of [T] and [TSize] and conversions between them.
      */
     private val operations: IntervalTypeOperations<T, TSize>
-)
+) : IntervalTypeOperationsTest<T, TSize>( operations, abSize )
 {
     private val valueOperations = operations.valueOperations
     private val sizeOperations = operations.sizeOperations
@@ -54,15 +57,16 @@ abstract class IntervalTest<T : Comparable<T>, TSize : Comparable<TSize>>(
     fun is_correct_test_configuration()
     {
         assertTrue( a < b && b < c )
+        assertTrue( abSize > sizeOperations.additiveIdentity )
 
-        // For evenly-spaced types, the distance between a-b, and b-c, should be greater than the spacing.
+        // The distance between a-b and b-c should be equal.
+        val abSize = valueOperations.unsafeSubtract( b, a )
+        val bcSize = valueOperations.unsafeSubtract( c, b )
+        assertTrue( abSize == bcSize )
+
+        // For evenly-spaced types, the distance should be e greater than the spacing.
         val spacing = valueOperations.spacing
-        if ( spacing != null )
-        {
-            val abSize = valueOperations.unsafeSubtract( b, a )
-            val bcSize = valueOperations.unsafeSubtract( c, b )
-            assertTrue( abSize > spacing && bcSize > spacing )
-        }
+        if ( spacing != null ) assertTrue( abSize > spacing )
     }
 
     @Test
@@ -137,25 +141,11 @@ abstract class IntervalTest<T : Comparable<T>, TSize : Comparable<TSize>>(
     }
 
     @Test
-    fun size_for_empty_interval_is_zero()
+    fun size_for_interval_with_one_value_is_zero()
     {
         val zero = sizeOperations.additiveIdentity
-        val emptyInterval = createClosedInterval( a, a )
-        assertEquals( zero, emptyInterval.size )
-    }
-
-    @Test
-    fun size_can_be_greater_than_max_value()
-    {
-        val fullRange = createClosedInterval( valueOperations.minValue, valueOperations.maxValue ).size
-        val identity = valueOperations.additiveIdentity
-        val rangeBelowIdentity = createClosedInterval( valueOperations.minValue, identity ).size
-        val rangeAboveIdentity = createClosedInterval( identity, valueOperations.maxValue ).size
-
-        assertEquals(
-            fullRange,
-            sizeOperations.unsafeAdd( rangeBelowIdentity, rangeAboveIdentity )
-        )
+        val oneValue = createClosedInterval( a, a )
+        assertEquals( zero, oneValue.size )
     }
 
     @Test
@@ -187,6 +177,82 @@ abstract class IntervalTest<T : Comparable<T>, TSize : Comparable<TSize>>(
     {
         val openIntervals = listOf( createOpenInterval( a, b ), createOpenInterval( b, a ) )
         openIntervals.forEach { assertTrue( a !in it && b !in it ) }
+    }
+
+    @Test
+    fun getValueAt_inside_interval()
+    {
+        val acIntervals = createAllInclusionTypeIntervals( a, c )
+
+        for ( ac in acIntervals )
+        {
+            assertEquals( a,ac.getValueAt( 0.0 ) )
+            assertEquals( b, ac.getValueAt( 0.5 ) )
+            assertEquals( c, ac.getValueAt( 1.0 ) )
+        }
+    }
+
+    @Test
+    fun getValueAt_outside_interval()
+    {
+        val abIntervals = createAllInclusionTypeIntervals( a, b )
+        for ( ab in abIntervals )
+        {
+            assertEquals( c, ab.getValueAt( 2.0 ) )
+        }
+
+        val bcIntervals = createAllInclusionTypeIntervals( b, c )
+        for ( bc in bcIntervals )
+        {
+            assertEquals( a, bc.getValueAt( -1.0 ) )
+        }
+    }
+
+    @Test
+    fun getValueAt_reverse_intervals()
+    {
+        val adIntervals = createAllInclusionTypeIntervals( a, d )
+
+        for ( ad in adIntervals )
+        {
+            val nonReversed = ad.getValueAt( 0.2 )
+            val reversed = ad.reverse().getValueAt( 0.8 )
+            assertEquals(
+                valueOperations.toDouble( nonReversed ),
+                valueOperations.toDouble( reversed ),
+                absoluteTolerance = 0.000000001
+            )
+        }
+    }
+
+    @Test
+    fun getValueAt_returned_value_overflows()
+    {
+        val maxIntervals = createAllInclusionTypeIntervals( operations.minValue, operations.maxValue )
+
+        for ( max in maxIntervals )
+        {
+            assertEquals( max.start, max.getValueAt( 0.0 ) )
+            // Loss of precision for large values as part of double conversion is expected.
+            // Therefore, compare double-converted values which have the same loss of precision.
+            assertEquals(
+                valueOperations.toDouble(max.end ),
+                valueOperations.toDouble( max.getValueAt( 1.0 ) )
+            )
+            assertFailsWith<ArithmeticException> { max.getValueAt( -0.1 ) }
+            assertFailsWith<ArithmeticException> { max.getValueAt( 1.1 ) }
+        }
+    }
+
+    @Test
+    fun getValueAt_percentage_overflows()
+    {
+        val ab = createClosedInterval( a, b )
+
+        val maxPercentage = sizeOperations.toDouble( sizeOperations.maxValue ) / sizeOperations.toDouble( ab.size )
+        val tooBigPercentage = maxPercentage * 2
+
+        assertFailsWith<ArithmeticException> { ab.getValueAt( tooBigPercentage ) }
     }
 
     @Test
@@ -406,6 +472,122 @@ abstract class IntervalTest<T : Comparable<T>, TSize : Comparable<TSize>>(
         val expected = createClosedInterval( a, c )
         assertEquals( expected, ab + bNextC )
         assertEquals( expected, bNextC + ab )
+    }
+
+    @Test
+    fun shift_succeeds()
+    {
+        val bcIntervals = createAllInclusionTypeIntervals( b, c )
+        val shiftSize = abSize
+        val expectedShiftSize: T = valueOperations.unsafeSubtract( b, a )
+
+        for ( bc in bcIntervals )
+        {
+            val shifted = bc.shift( shiftSize )
+            val expectedInterval = createInterval(
+                valueOperations.unsafeAdd( b, expectedShiftSize ),
+                bc.isStartIncluded,
+                valueOperations.unsafeAdd( c, expectedShiftSize ),
+                bc.isEndIncluded
+            )
+            assertEquals( expectedInterval, shifted.shiftedInterval )
+            assertEquals( shiftSize, shifted.offsetAmount )
+            assertEquals( bc.size, shifted.shiftedInterval.size )
+        }
+    }
+
+    @Test
+    fun shift_using_invertedDirection_succeeds()
+    {
+        val bcIntervals = createAllInclusionTypeIntervals( b, c )
+        val shiftSize = abSize
+        val expectedShiftSize: T = valueOperations.unsafeSubtract( b, a )
+
+        for ( bc in bcIntervals )
+        {
+            val shifted = bc.shift( shiftSize, invertDirection = true )
+            val expectedInterval = createInterval(
+                a,
+                bc.isStartIncluded,
+                valueOperations.unsafeSubtract( c, expectedShiftSize ),
+                bc.isEndIncluded
+            )
+            assertEquals( expectedInterval, shifted.shiftedInterval )
+            assertEquals( shiftSize, shifted.offsetAmount )
+            assertEquals( bc.size, shifted.shiftedInterval.size )
+        }
+    }
+
+    @Test
+    fun shift_negative_amount_equals_shift_positive_amount_using_invertedDirection()
+    {
+        if ( !sizeOperations.isSignedType ) return
+
+        val bc = createClosedInterval( b, c )
+        val abSizeNegative = sizeOperations.unsafeSubtract( sizeOperations.additiveIdentity, abSize )
+        val shiftNegative = bc.shift( abSizeNegative )
+
+        val shiftPositive = bc.shift( abSize, invertDirection = true )
+        assertEquals( shiftPositive.shiftedInterval, shiftNegative.shiftedInterval )
+        assertEquals( abSizeNegative, shiftNegative.offsetAmount )
+    }
+
+    @Test
+    fun shift_by_zero_returns_same_interval()
+    {
+        val toShift = createAllInclusionTypeIntervals( a, b )
+        for ( original in toShift )
+        {
+            val zero = sizeOperations.additiveIdentity
+
+            val shiftResult = original.shift( zero )
+            assertSame( original, shiftResult.shiftedInterval )
+
+            val shiftResultInverted = original.shift( zero, invertDirection = true )
+            assertSame( original, shiftResultInverted.shiftedInterval )
+        }
+    }
+
+    @Test
+    fun shift_with_overflow_shifts_up_to_maximum_value()
+    {
+        val bottomHalf = createClosedInterval( operations.minValue, valueOperations.additiveIdentity )
+        val maxRange = operations.getDistance( operations.minValue, operations.maxValue )
+
+        val shifted = bottomHalf.shift( maxRange )
+
+        assertEquals( operations.maxValue, shifted.shiftedInterval.upperBound )
+        assertEquals( bottomHalf.size, shifted.shiftedInterval.size )
+        val expectedShift = sizeOperations.unsafeSubtract( maxRange, bottomHalf.size )
+        assertEquals( expectedShift, shifted.offsetAmount )
+    }
+
+    @Test
+    fun shift_using_invertedDirection_with_overflow_shifts_down_to_minimum_value()
+    {
+        val upperHalf = createClosedInterval( valueOperations.additiveIdentity, operations.maxValue )
+        val maxRange = operations.getDistance( operations.minValue, operations.maxValue )
+
+        val shifted = upperHalf.shift( maxRange, invertDirection = true )
+
+        assertEquals( operations.minValue, shifted.shiftedInterval.lowerBound )
+        assertEquals( upperHalf.size, shifted.shiftedInterval.size )
+        val expectedShift = sizeOperations.unsafeSubtract( maxRange, upperHalf.size )
+        assertEquals( expectedShift, shifted.offsetAmount )
+    }
+
+    @Test
+    fun shift_tiny_intervals_long_distances_for_value_types_with_lossy_precision()
+    {
+        if ( valueOperations.spacing != null ) return // Evenly-spaced types don't lose precision.
+
+        val tinyInterval = createOpenInterval( a, b )
+        val shifted = tinyInterval.shift( sizeOperations.maxValue )
+
+        // Due to loss of precision, there is no more distinction between `a` and `b` after shifting, resulting in an
+        // interval with `size` 0. This causes the interval to "collapse" into a single value, represented as a closed
+        // interval.
+        assertTrue( shifted.shiftedInterval.isClosedInterval )
     }
 
     @Test

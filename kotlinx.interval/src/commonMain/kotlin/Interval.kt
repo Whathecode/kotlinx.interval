@@ -22,6 +22,11 @@ open class Interval<T : Comparable<T>, TSize : Comparable<TSize>>(
 {
     init
     {
+        require( lowerBound >= operations.minValue )
+            { "Lower bound shouldn't be smaller than ${operations.minValue} to prevent interval size overflows." }
+        require( upperBound <= operations.maxValue )
+            { "Upper bound shouldn't be greater than ${operations.maxValue} to prevent interval size overflows." }
+
         if ( !isStartIncluded || !isEndIncluded )
         {
             require( start != end ) { "Open or half-open intervals should have differing start and end value." }
@@ -72,24 +77,34 @@ open class Interval<T : Comparable<T>, TSize : Comparable<TSize>>(
     /**
      * The absolute difference between [start] and [end].
      */
-    val size: TSize get()
-    {
-        val zero = valueOperations.additiveIdentity
-        val startDistance = operations.getDistanceTo( start )
-        val endDistance = operations.getDistanceTo( end )
-        val valuesHaveOppositeSign = start <= zero != end <= zero
+    val size: TSize get() = operations.getDistance( start, end )
 
-        return if ( valuesHaveOppositeSign )
-        {
-            sizeOperations.unsafeAdd( startDistance, endDistance )
-        }
-        else
-        {
-            if ( startDistance < endDistance ) sizeOperations.unsafeSubtract( endDistance, startDistance )
-            else sizeOperations.unsafeSubtract( startDistance, endDistance )
-        }
+
+    /**
+     * Safe initialization of a calculated interval in case loss of precision can cause invalid initialization.
+     * I.e., coerce values to the minimum and maximum allowed values, and collapse the interval to a single value in
+     * case its size is zero.
+     */
+    private fun safeInterval(
+        start: T,
+        isStartIncluded: Boolean,
+        end: T,
+        isEndIncluded: Boolean
+    ): Interval<T, TSize>
+    {
+        val coercedStart = coerceMinMax( start )
+        val coercedEnd = coerceMinMax( end )
+
+        val interval =
+            if ( coercedStart == coercedEnd ) Interval( coercedStart, true, coercedEnd, true, operations )
+            else Interval( coercedStart, isStartIncluded, coercedEnd, isEndIncluded, operations )
+        return interval
     }
 
+    private fun coerceMinMax( value: T ) =
+        if ( value > operations.maxValue ) operations.maxValue
+        else if ( value < operations.minValue ) operations.minValue
+        else value
 
     override fun iterator(): Iterator<Interval<T, TSize>> = listOf( this ).iterator()
 
@@ -105,6 +120,34 @@ open class Interval<T : Comparable<T>, TSize : Comparable<TSize>>(
 
         return ( lowerCompare > 0 || (lowerCompare == 0 && isLowerBoundIncluded) )
             && ( upperCompare < 0 || (upperCompare == 0 && isUpperBoundIncluded) )
+    }
+
+    /**
+     * Get the value at a given percentage within (0.0–1.0) or outside (< 0.0, > 1.0) of the interval.
+     * 0.0 corresponds to [start] and 1.0 to [end].
+     * The calculation is performed using [Double] arithmetic and the result is rounded to the to nearest value of [T].
+     *
+     * @throws ArithmeticException if the resulting value falls outside the range which can be represented by [T].
+     */
+    fun getValueAt( percentage: Double ): T
+    {
+        val normalizedPercentage = if ( isReversed ) 1.0 - percentage else percentage
+        val shiftLeft = normalizedPercentage < 0
+        val absPercentage = if ( shiftLeft ) -normalizedPercentage else normalizedPercentage
+        val addToLowerBoundDouble = sizeOperations.toDouble( size ) * absPercentage
+
+        // Throw when the resulting value can't be represented by T.
+        if ( shiftLeft || normalizedPercentage > 1 )
+        {
+            val max = if ( shiftLeft ) operations.minValue else operations.maxValue
+            val toMax = operations.getDistance( lowerBound, max )
+            val toMaxDouble = sizeOperations.toDouble( toMax )
+            if ( addToLowerBoundDouble > toMaxDouble )
+                throw ArithmeticException( "The resulting value is out of bounds for this type." )
+        }
+
+        val addToLowerBoundSize = sizeOperations.fromDouble( addToLowerBoundDouble )
+        return operations.unsafeShift( lowerBound, addToLowerBoundSize, shiftLeft )
     }
 
     /**
@@ -169,6 +212,42 @@ open class Interval<T : Comparable<T>, TSize : Comparable<TSize>>(
             pairCompare.lower.lowerBound, pairCompare.lower.isLowerBoundIncluded,
             pairCompare.upper.upperBound, pairCompare.upper.isUpperBoundIncluded,
             pairCompare.lower.operations )
+    }
+
+    override fun shift( amount: TSize, invertDirection: Boolean ): ShiftResult<Interval<T, TSize>, TSize>
+    {
+        val sizeZero = sizeOperations.additiveIdentity
+        if ( amount == sizeZero ) return ShiftResult( this, amount )
+
+        // Clamp maximum amount to shift to min/max value which can be represented by values of T.
+        val shiftRight = if ( amount >= sizeZero ) !invertDirection else invertDirection
+        val valueZero = valueOperations.additiveIdentity
+        val (max, bound) =
+            if ( shiftRight ) Pair( operations.maxValue, upperBound )
+            else Pair( operations.minValue, lowerBound )
+        var maxSize = operations.getDistance( valueZero, max )
+        val boundSize = operations.getDistance( valueZero, bound )
+        if ( amount < sizeZero )
+        {
+            maxSize = sizeOperations.unsafeSubtract( sizeZero, maxSize )
+        }
+        val maxShift =
+            if ( (bound < valueZero && shiftRight) || (bound > valueZero && !shiftRight) )
+            {
+                sizeOperations.unsafeAdd( maxSize, boundSize )
+            }
+            else
+            {
+                sizeOperations.unsafeSubtract( maxSize, boundSize )
+            }
+        val overflows = if ( amount < sizeZero ) amount <= maxShift else amount >= maxShift
+        val toShift = if ( overflows ) maxShift else amount
+
+        // Return shifted interval.
+        val shiftedStart = operations.unsafeShift( start, toShift, invertDirection )
+        val shiftedEnd = operations.unsafeShift( end, toShift, invertDirection )
+        val shifted = safeInterval( shiftedStart, isStartIncluded, shiftedEnd, isEndIncluded )
+        return ShiftResult( shifted, toShift )
     }
 
     /**

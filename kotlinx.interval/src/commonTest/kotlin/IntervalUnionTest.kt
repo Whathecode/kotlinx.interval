@@ -1,5 +1,6 @@
 package io.github.whathecode.kotlinx.interval
 
+import kotlin.math.absoluteValue
 import kotlin.test.*
 
 
@@ -11,10 +12,13 @@ class EmptyIntervalUnionTest
     private val empty = emptyIntervalUnion<Int, UInt>()
 
     @Test
-    fun isEmpty() = assertTrue( empty.isEmpty() )
+    fun isEmpty_is_true() = assertTrue( empty.isEmpty() )
 
     @Test
-    fun getBounds_for_empty_union_is_null() = assertEquals( null, empty.getBounds() )
+    fun getBounds_is_null() = assertEquals( null, empty.getBounds() )
+
+    @Test
+    fun contains_is_always_false() = assertFalse( empty.contains( 42 ) )
 
     @Test
     fun minus_returns_empty_interval()
@@ -31,7 +35,21 @@ class EmptyIntervalUnionTest
     }
 
     @Test
-    fun setEquals_only_other_empty_union() = assertTrue( empty.setEquals( emptyIntervalUnion() ) )
+    fun shift_returns_empty_interval_and_never_overflows()
+    {
+        val toShift = UInt.MAX_VALUE
+
+        val emptyShifted = empty.shift( toShift )
+
+        assertEquals( empty, emptyShifted.shiftedInterval )
+        assertEquals( toShift, emptyShifted.offsetAmount )
+    }
+
+    @Test
+    fun intersects_is_always_false() = assertFalse( empty.intersects( interval( 0, 10 ) ) )
+
+    @Test
+    fun setEquals_only_true_compared_to_other_empty_union() = assertTrue( empty.setEquals( emptyIntervalUnion() ) )
 }
 
 
@@ -344,6 +362,58 @@ class IntervalUnionPairTest
             setOf( lower1, interval( 15, 30 ), upper2 ),
             union + overlapsBothInnerIntervals
         )
+    }
+
+    @Test
+    fun shift_shifts_both_intervals()
+    {
+        val lower = interval( 5, 10 )
+        val upper = interval( 15, 20 )
+        val union = intervalUnionPair( lower, upper )
+
+        val shifted = union.shift( 5u, invertDirection = false )
+
+        assertUnionEquals(
+            setOf( interval( 10, 15 ), interval( 20, 25 ) ),
+            shifted.shiftedInterval
+        )
+        assertEquals( 5u, shifted.offsetAmount )
+    }
+
+    @Test
+    fun shift_with_overflow_shifts_up_to_maximum_value()
+    {
+        val lower = interval( 0, 1000 )
+        val upper = interval( 10_000, 30_000 )
+        val union = intervalUnionPair( lower, upper )
+
+        val maxShift = UInt.MAX_VALUE
+        val shifted = union.shift( maxShift )
+
+        val expectedShift = (Int.MAX_VALUE - 30_000).toUInt()
+        assertEquals(
+            union.shift( expectedShift ).shiftedInterval.toSet(),
+            shifted.shiftedInterval.toSet()
+        )
+        assertEquals( expectedShift, shifted.offsetAmount )
+    }
+
+    @Test
+    fun shift_using_invertDirection_with_overflow_shifts_down_to_minimum_value()
+    {
+        val lower = interval( -30_000, -10_000 )
+        val upper = interval( -1000, 0 )
+        val union = intervalUnionPair( lower, upper )
+
+        val maxShift = UInt.MAX_VALUE
+        val shifted = union.shift( maxShift, invertDirection = true )
+
+        val expectedShift = (Int.MIN_VALUE + 30_000).absoluteValue.toUInt()
+        assertEquals(
+            union.shift( expectedShift, invertDirection = true ).shiftedInterval.toSet(),
+            shifted.shiftedInterval.toSet()
+        )
+        assertEquals( expectedShift, shifted.offsetAmount )
     }
 
     @Test

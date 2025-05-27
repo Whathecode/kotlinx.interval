@@ -14,6 +14,7 @@ val interval: IntInterval = interval( 0, 10, isEndIncluded = false )
 val areIncluded = 0 in interval && 5 in interval // true
 val areExcluded = 10 !in interval && 15 !in interval // true
 val size: UInt = interval.size // 10
+val shifted = interval shr 10u // Shifted right by 10: [10, 20)
 ```
 
 This protects against overflows (e.g. if `size > Int.MAX_VALUE`) but also offers better semantics.
@@ -24,6 +25,7 @@ val now = Clock.System.now()
 val interval: InstantInterval = interval( now, now + 100.seconds )
 val areIncluded = now + 50.seconds in interval // true
 val size: Duration = interval.size // 100 seconds
+val shifted = interval shr 24.hours // 100 seconds 24 hours from now
 ```
 
 ## Interval Unions
@@ -36,6 +38,7 @@ Since operations are generally defined on the base interface, you can easily cha
 val start = interval( 0, 100 ) // Interval: [0, 100]
 val areIncluded = 50 in start && 100 in start // true
 val splitInTwo = start - interval( 25, 85 ) // Union: [[0, 25), (85, 100]]
+val shiftBackAndForth = splitInTwo shr 100u shl 100u // == splitInTwo
 val areExcluded = 50 !in splitInTwo && 85 !in splitInTwo // true
 val unite = splitInTwo + interval( 10, 90 ) // Interval: [0, 100]
 val backToStart = start == unite // true
@@ -63,17 +66,18 @@ Instead, new instances are returned if the operation results in a different set 
 
 The following operations are available for any `IntervalUnion<T, TSize>`:
 
-|      Operation      |                                         Description                                          | 
-|:-------------------:|:--------------------------------------------------------------------------------------------:|
-|     `isEmpty()`     |                           Determines whether this is an empty set.                           |
-|    `getBounds()`    |                          Gets the upper and lower bound of the set.                          |
-| `contains()` (`in`) |                         Determines whether a value lies in the set.                          |
-|   `minus()` (`-`)   |                              Subtract an interval from the set.                              |
-|   `plus()` (`+`)    |                                Add an interval from the set.                                 |
-|   `intersects()`    |                Determines whether another interval intersects with this set.                 |
-|    `setEquals()`    |                     Determines whether a set represents the same values.                     |
-|    `iterator()`     |                      Iterate over all intervals in the union, in order.                      |
-|    `toString()`     | Output as a string using common interval notation, e.g., `[0, 10]` or `[[0, 10), (10, 20]]`. |
+|        Operation        |                                         Description                                          | 
+|:-----------------------:|:--------------------------------------------------------------------------------------------:|
+|       `isEmpty()`       |                           Determines whether this is an empty set.                           |
+|      `getBounds()`      |                          Gets the upper and lower bound of the set.                          |
+|   `contains()` (`in`)   |                         Determines whether a value lies in the set.                          |
+|     `minus()` (`-`)     |                              Subtract an interval from the set.                              |
+|     `plus()` (`+`)      |                                 Add an interval to the set.                                  |
+| `shift()` (`shl`/`shr`) |                           Move the interval by a specified offset.                           |
+|     `intersects()`      |                Determines whether another interval intersects with this set.                 |
+|      `setEquals()`      |                     Determines whether a set represents the same values.                     |
+|      `iterator()`       |                      Iterate over all intervals in the union, in order.                      |
+|      `toString()`       | Output as a string using common interval notation, e.g., `[0, 10]` or `[[0, 10), (10, 20]]`. |
 
 The following operations are specific to `Interval<T, TSize>`:
 
@@ -87,6 +91,7 @@ The following operations are specific to `Interval<T, TSize>`:
 |           `lowerBound`, `upperBound`           |                       Corresponds to `start` and `end`, but swapped if `isReversed`.                       |
 | `isLowerBoundIncluded`, `isUpperBoundIncluded` |             Corresponds to `isStartIncluded` and `isEndIncluded`, but swapped if `isReversed`.             |
 |                     `size`                     |                             The absolute difference between `start` and `end`.                             |
+|                 `getValueAt()`                 |        Get the value at a given percentage inside (0.0–1.0) or outside (< 0.0, > 1.0) the interval.        |
 |                `nonReversed()`                 |                             `reverse()` the interval in case it `isReversed`.                              |
 |                  `reverse()`                   |             Return an interval which swaps `start` with `end`, as well as boundary inclusions.             |
 |                `canonicalize()`                | Return the interval in canonical form. E.g., The canonical form of `[5, 1)` is `[2, 5]` for integer types. |

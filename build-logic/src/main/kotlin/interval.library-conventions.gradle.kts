@@ -1,8 +1,8 @@
 import java.io.FileInputStream
 import java.util.Properties
-import org.jetbrains.dokka.Platform
-import org.jetbrains.dokka.gradle.DokkaTask
-import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
+import org.jetbrains.dokka.gradle.engine.parameters.KotlinPlatform
+import org.jetbrains.dokka.gradle.internal.InternalDokkaGradlePluginApi
+import org.jetbrains.dokka.gradle.tasks.DokkaGenerateTask
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 
@@ -20,7 +20,6 @@ repositories {
 
 kotlin {
     jvm {
-        @OptIn(ExperimentalKotlinGradlePluginApi::class)
         compilerOptions {
             jvmTarget = JvmTarget.JVM_1_8
         }
@@ -34,14 +33,15 @@ kotlin {
         }
         binaries.executable()
     }
-    val hostOs = System.getProperty("os.name")
-    val isMingwX64 = hostOs.startsWith("Windows")
-    val nativeTarget = when {
-        hostOs == "Mac OS X" -> macosX64("native")
-        hostOs == "Linux" -> linuxX64("native")
-        isMingwX64 -> mingwX64("native")
-        else -> throw GradleException("Host OS is not supported in Kotlin/Native.")
-    }
+    linuxX64()
+
+    macosX64()
+    macosArm64()
+    iosSimulatorArm64()
+    iosX64()
+    iosArm64()
+
+    mingwX64()
 
 
     sourceSets {
@@ -51,30 +51,29 @@ kotlin {
                 implementation(kotlin("test"))
             }
         }
-        val jvmMain by getting
-        val jvmTest by getting
-        val jsMain by getting
-        val jsTest by getting
-        val nativeMain by getting
-        val nativeTest by getting
     }
 }
 
 
 // Documentation.
-val dokkaJvmJavadoc by tasks.creating(DokkaTask::class) {
+dokka {
     dokkaSourceSets {
         register("jvm") {
-            platform.set(Platform.jvm)
+            analysisPlatform.set(KotlinPlatform.JVM)
             sourceRoots.from(kotlin.sourceSets.getByName("jvmMain").kotlin.srcDirs)
         }
     }
+}
+tasks.withType<DokkaGenerateTask>().configureEach {
+    // HACK: Dokka 2.0.0 exposes this debug file by default (https://github.com/Kotlin/dokka/issues/3958)
+    @OptIn( InternalDokkaGradlePluginApi::class )
+    dokkaConfigurationJsonFile.convention( null as RegularFile? )
 }
 val javadocJar by tasks.creating(Jar::class) {
     group = JavaBasePlugin.DOCUMENTATION_GROUP
     description = "Create javadoc jar using Dokka"
     archiveClassifier.set("javadoc")
-    from(dokkaJvmJavadoc)
+    from(tasks.dokkaGeneratePublicationHtml)
 }
 
 
@@ -88,7 +87,7 @@ publishing {
     repositories {
         maven {
             name = "local"
-            url = uri("${layout.buildDirectory}/repo")
+            url = uri("${layout.projectDirectory}/build/repository")
         }
     }
     publications.filterIsInstance<MavenPublication>().forEach {

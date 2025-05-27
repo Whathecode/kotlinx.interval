@@ -1,5 +1,7 @@
 package io.github.whathecode.kotlinx.interval
 
+import kotlin.math.roundToInt
+import kotlin.math.roundToLong
 import kotlin.reflect.KClass
 
 
@@ -45,6 +47,9 @@ internal object ByteOperations : TypeOperations<Byte>
 
     override fun unsafeAdd( a: Byte, b: Byte ): Byte = (a + b).toByte()
     override fun unsafeSubtract( a: Byte, b: Byte ): Byte = (a - b).toByte()
+
+    override fun fromDouble( double: Double ) = double.roundToInt().toByte()
+    override fun toDouble( value: Byte ) = value.toDouble()
 }
 
 internal object ShortOperations : TypeOperations<Short>
@@ -56,6 +61,9 @@ internal object ShortOperations : TypeOperations<Short>
 
     override fun unsafeAdd( a: Short, b: Short ): Short = (a + b).toShort()
     override fun unsafeSubtract( a: Short, b: Short ): Short = (a - b).toShort()
+
+    override fun fromDouble( double: Double ) = double.roundToInt().toShort()
+    override fun toDouble( value: Short ) = value.toDouble()
 }
 
 internal object IntOperations : TypeOperations<Int>
@@ -67,6 +75,9 @@ internal object IntOperations : TypeOperations<Int>
 
     override fun unsafeAdd( a: Int, b: Int ): Int = a + b
     override fun unsafeSubtract( a: Int, b: Int ): Int = a - b
+
+    override fun fromDouble( double: Double ): Int = double.roundToInt()
+    override fun toDouble( value: Int ): Double = value.toDouble()
 }
 
 internal object LongOperations : TypeOperations<Long>
@@ -78,28 +89,37 @@ internal object LongOperations : TypeOperations<Long>
 
     override fun unsafeAdd( a: Long, b: Long ): Long = a + b
     override fun unsafeSubtract( a: Long, b: Long ): Long = a - b
+
+    override fun fromDouble( double: Double ): Long = double.roundToLong()
+    override fun toDouble( value: Long ): Double = value.toDouble()
 }
 
 internal object FloatOperations : TypeOperations<Float>
 {
     override val additiveIdentity: Float = 0f
-    override val minValue: Float = -Float.MAX_VALUE
-    override val maxValue: Float = Float.MAX_VALUE
+    override val minValue: Float = Float.NEGATIVE_INFINITY
+    override val maxValue: Float = Float.POSITIVE_INFINITY
     override val spacing: Float? = null
 
     override fun unsafeAdd( a: Float, b: Float ): Float = a + b
     override fun unsafeSubtract( a: Float, b: Float ): Float = a - b
+
+    override fun fromDouble( double: Double ): Float = double.toFloat()
+    override fun toDouble( value: Float ): Double = value.toDouble()
 }
 
 internal object DoubleOperations : TypeOperations<Double>
 {
     override val additiveIdentity: Double = 0.0
-    override val minValue: Double = -Double.MAX_VALUE
-    override val maxValue: Double = Double.MAX_VALUE
+    override val minValue: Double = Double.NEGATIVE_INFINITY
+    override val maxValue: Double = Double.POSITIVE_INFINITY
     override val spacing: Double? = null
 
     override fun unsafeAdd( a: Double, b: Double ): Double = a + b
     override fun unsafeSubtract( a: Double, b: Double ): Double = a - b
+
+    override fun fromDouble( double: Double ): Double = double
+    override fun toDouble( value: Double ): Double = value
 }
 
 internal object UByteOperations : TypeOperations<UByte>
@@ -111,6 +131,9 @@ internal object UByteOperations : TypeOperations<UByte>
 
     override fun unsafeAdd( a: UByte, b: UByte ): UByte = (a + b).toUByte()
     override fun unsafeSubtract( a: UByte, b: UByte ): UByte = (a - b).toUByte()
+
+    override fun fromDouble( double: Double ): UByte = double.roundToInt().toUByte()
+    override fun toDouble( value: UByte ): Double = value.toDouble()
 }
 
 internal object UShortOperations : TypeOperations<UShort>
@@ -122,6 +145,9 @@ internal object UShortOperations : TypeOperations<UShort>
 
     override fun unsafeAdd( a: UShort, b: UShort ): UShort = (a + b).toUShort()
     override fun unsafeSubtract( a: UShort, b: UShort ): UShort = (a - b).toUShort()
+
+    override fun fromDouble( double: Double ): UShort = double.roundToInt().toUShort()
+    override fun toDouble( value: UShort ): Double = value.toDouble()
 }
 
 internal object UIntOperations : TypeOperations<UInt>
@@ -133,6 +159,13 @@ internal object UIntOperations : TypeOperations<UInt>
 
     override fun unsafeAdd( a: UInt, b: UInt ): UInt = a + b
     override fun unsafeSubtract( a: UInt, b: UInt ): UInt = a - b
+
+    override fun fromDouble( double: Double ): UInt
+    {
+        val uInt = double.toUInt()
+        return if ( double - uInt.toDouble() >= 0.5 ) uInt + 1.toUInt() else uInt
+    }
+    override fun toDouble( value: UInt ): Double = value.toDouble()
 }
 
 internal object ULongOperations : TypeOperations<ULong>
@@ -144,6 +177,13 @@ internal object ULongOperations : TypeOperations<ULong>
 
     override fun unsafeAdd( a: ULong, b: ULong ): ULong = a + b
     override fun unsafeSubtract( a: ULong, b: ULong ): ULong = a - b
+
+    override fun fromDouble( double: Double ): ULong
+    {
+        val uLong = double.toULong()
+        return if ( double - uLong.toDouble() >= 0.5 ) uLong + 1.toULong() else uLong
+    }
+    override fun toDouble( value: ULong ): Double = value.toDouble()
 }
 
 internal object CharOperations : TypeOperations<Char>
@@ -155,4 +195,7 @@ internal object CharOperations : TypeOperations<Char>
 
     override fun unsafeAdd( a: Char, b: Char ): Char = a + b.code
     override fun unsafeSubtract( a: Char, b: Char ): Char = (a - b).toChar()
+
+    override fun fromDouble( double: Double ): Char = double.roundToInt().toChar()
+    override fun toDouble( value: Char ): Double = value.code.toDouble()
 }

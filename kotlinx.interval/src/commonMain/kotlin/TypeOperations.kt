@@ -38,4 +38,22 @@ interface TypeOperations<T : Comparable<T>>
      * The resulting type is cast back to type [T].
      */
     fun unsafeSubtract( a: T, b: T ): T
+
+    /**
+     * Convert a [double] to the closest corresponding value of [T].
+     * If the [double] value is larger than what can be represented by [T] ([minValue]..[maxValue]), the returned value
+     * will overflow.
+     */
+    fun fromDouble( double: Double ): T
+
+    /**
+     * Convert [value] to a [Double], which may be lossy.
+     */
+    fun toDouble( value: T ): Double
+
+
+    /**
+     * Determines whether this type can represent negative values.
+     */
+    val isSignedType: Boolean get() = minValue < additiveIdentity
 }
