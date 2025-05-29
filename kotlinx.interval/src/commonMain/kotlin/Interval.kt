@@ -131,23 +131,28 @@ open class Interval<T : Comparable<T>, TSize : Comparable<TSize>>(
      */
     fun getValueAt( percentage: Double ): T
     {
+        val lowerBoundDouble = valueOperations.toDouble( lowerBound )
+        val upperBoundDouble = valueOperations.toDouble( upperBound )
+        val size = upperBoundDouble - lowerBoundDouble
+
         val normalizedPercentage = if ( isReversed ) 1.0 - percentage else percentage
-        val shiftLeft = normalizedPercentage < 0
-        val absPercentage = if ( shiftLeft ) -normalizedPercentage else normalizedPercentage
-        val addToLowerBoundDouble = sizeOperations.toDouble( size ) * absPercentage
+        val valueDouble = lowerBoundDouble + (normalizedPercentage * size)
 
         // Throw when the resulting value can't be represented by T.
-        if ( shiftLeft || normalizedPercentage > 1 )
+        if ( normalizedPercentage < 0.0 )
         {
-            val max = if ( shiftLeft ) operations.minValue else operations.maxValue
-            val toMax = operations.getDistance( lowerBound, max )
-            val toMaxDouble = sizeOperations.toDouble( toMax )
-            if ( addToLowerBoundDouble > toMaxDouble )
-                throw ArithmeticException( "The resulting value is out of bounds for this type." )
+            val min = valueOperations.toDouble( operations.minValue )
+            if ( valueDouble < min )
+                throw ArithmeticException( "The resulting value $valueDouble is out of bounds for this type." )
+        }
+        else if ( normalizedPercentage > 1.0 )
+        {
+            val max = valueOperations.toDouble( operations.maxValue )
+            if ( valueDouble > max )
+                throw ArithmeticException( "The resulting value $valueDouble is out of bounds for this type." )
         }
 
-        val addToLowerBoundSize = sizeOperations.fromDouble( addToLowerBoundDouble )
-        return operations.unsafeShift( lowerBound, addToLowerBoundSize, shiftLeft )
+        return valueOperations.fromDouble( valueDouble )
     }
 
     fun getPercentageFor( value: T ): Double
