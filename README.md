@@ -28,6 +28,22 @@ val size: Duration = interval.size // 100 seconds
 val shifted = interval shr 24.hours // 100 seconds 24 hours from now
 ```
 
+Intervals support common math operations which allow concisely expressing common use cases.
+
+```kotlin
+// Two intervals of different types: a timeline visualized at some screen coordinates.
+val start2025 = LocalDateTime( 2025, 1, 1, 0, 0 ).toInstant( TimeZone.UTC )
+val end2025 = LocalDateTime( 2026, 1, 1, 0, 0 ).toInstant( TimeZone.UTC )
+val year2025: InstantInterval = interval( start2025, end2025 )
+val timelineUi: IntInterval = interval( 0, 800 ) // UI element 800 pixels wide
+
+// Find the selected time at a given UI coordinate using linear interpolation.
+val mouseX = 400
+val uiPercentage: Double = timelineUi.getPercentageFor( mouseX )
+val selectedTime: Instant = year2025.getValueAt( uiPercentage ) // July 2nd at noon.
+```
+
+
 ## Interval Unions
 
 Intervals are a subset of _interval unions_, which represent a collection of intervals.
@@ -92,6 +108,7 @@ The following operations are specific to `Interval<T, TSize>`:
 | `isLowerBoundIncluded`, `isUpperBoundIncluded` |             Corresponds to `isStartIncluded` and `isEndIncluded`, but swapped if `isReversed`.             |
 |                     `size`                     |                             The absolute difference between `start` and `end`.                             |
 |                 `getValueAt()`                 |        Get the value at a given percentage inside (0.0–1.0) or outside (< 0.0, > 1.0) the interval.        |
+|              `getPercentageFor()`              |    Gets the percentage how far within (0.0-1.0) or outside (< 0.0, > 1.0) of the interval a value lies.    |
 |                `nonReversed()`                 |                             `reverse()` the interval in case it `isReversed`.                              |
 |                  `reverse()`                   |             Return an interval which swaps `start` with `end`, as well as boundary inclusions.             |
 |                `canonicalize()`                | Return the interval in canonical form. E.g., The canonical form of `[5, 1)` is `[2, 5]` for integer types. |
