@@ -150,6 +150,15 @@ open class Interval<T : Comparable<T>, TSize : Comparable<TSize>>(
         return operations.unsafeShift( lowerBound, addToLowerBoundSize, shiftLeft )
     }
 
+    fun getPercentageFor( value: T ): Double
+    {
+        val valueDouble = valueOperations.toDouble( value )
+        val startDouble = valueOperations.toDouble( start )
+        val endDouble = valueOperations.toDouble( end )
+
+        return (valueDouble - startDouble) / (endDouble - startDouble)
+    }
+
     /**
      * Return an [IntervalUnion] representing all [T] values in this interval,
      * excluding all [T] values in the specified interval [toSubtract].
