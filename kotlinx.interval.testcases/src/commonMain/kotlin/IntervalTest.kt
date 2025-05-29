@@ -196,16 +196,10 @@ abstract class IntervalTest<T : Comparable<T>, TSize : Comparable<TSize>>(
     fun getValueAt_outside_interval()
     {
         val abIntervals = createAllInclusionTypeIntervals( a, b )
-        for ( ab in abIntervals )
-        {
-            assertEquals( c, ab.getValueAt( 2.0 ) )
-        }
+        for ( ab in abIntervals ) assertEquals( c, ab.getValueAt( 2.0 ) )
 
         val bcIntervals = createAllInclusionTypeIntervals( b, c )
-        for ( bc in bcIntervals )
-        {
-            assertEquals( a, bc.getValueAt( -1.0 ) )
-        }
+        for ( bc in bcIntervals ) assertEquals( a, bc.getValueAt( -1.0 ) )
     }
 
     @Test
@@ -253,6 +247,43 @@ abstract class IntervalTest<T : Comparable<T>, TSize : Comparable<TSize>>(
         val tooBigPercentage = maxPercentage * 2
 
         assertFailsWith<ArithmeticException> { ab.getValueAt( tooBigPercentage ) }
+    }
+
+    @Test
+    fun getPercentageFor_inside_interval()
+    {
+        val acIntervals = createAllInclusionTypeIntervals( a, c )
+
+        for ( ac in acIntervals )
+        {
+            assertEquals( 0.0, ac.getPercentageFor( a ) )
+            assertEquals( 0.5, ac.getPercentageFor( b ) )
+            assertEquals( 1.0, ac.getPercentageFor( c ) )
+        }
+    }
+
+    @Test
+    fun getPercentageFor_outside_interval()
+    {
+        val bcIntervals = createAllInclusionTypeIntervals( b, c )
+        for ( bc in bcIntervals ) assertEquals( -1.0, bc.getPercentageFor( a ) )
+
+        val abIntervals = createAllInclusionTypeIntervals( a, b )
+        for ( ab in abIntervals ) assertEquals( 2.0, ab.getPercentageFor( c ) )
+    }
+
+    @Test
+    fun getPercentageFor_reverse_intervals()
+    {
+        val adIntervals = createAllInclusionTypeIntervals( a, d )
+        for ( ad in adIntervals )
+        {
+            // a, b, c, and d all lie the same distance apart, so b and c are 1/4th of the bounds away.
+            val nonReversed = ad.getPercentageFor( b )
+            assertEquals( 0.333, nonReversed, absoluteTolerance = 0.001 )
+            val reversed = ad.reverse().getPercentageFor( b )
+            assertEquals( 0.666, reversed, absoluteTolerance = 0.001 )
+        }
     }
 
     @Test
