@@ -56,14 +56,6 @@ kotlin {
 
 
 // Documentation.
-dokka {
-    dokkaSourceSets {
-        register("jvm") {
-            analysisPlatform.set(KotlinPlatform.JVM)
-            sourceRoots.from(kotlin.sourceSets.getByName("jvmMain").kotlin.srcDirs)
-        }
-    }
-}
 tasks.withType<DokkaGenerateTask>().configureEach {
     // HACK: Dokka 2.0.0 exposes this debug file by default (https://github.com/Kotlin/dokka/issues/3958)
     @OptIn( InternalDokkaGradlePluginApi::class )
