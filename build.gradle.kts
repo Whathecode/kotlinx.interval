@@ -21,7 +21,7 @@ if (publishPropertiesFile.exists()) {
     publishProperties.load(java.io.FileInputStream(publishPropertiesFile))
 }
 group = "io.github.whathecode.kotlinx.interval"
-version = "2.0.0"
+version = "2.1.0"
 if (properties.containsKey("snapshot"))
 {
     val versionSplit = version.toString().split("-")
