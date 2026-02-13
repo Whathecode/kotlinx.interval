@@ -19,7 +19,7 @@ kotlin {
         commonMain {
             dependencies {
                 api(project(":kotlinx-interval"))
-                implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.2")
+                implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.7.1")
             }
         }
         commonTest {

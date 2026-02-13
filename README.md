@@ -18,7 +18,7 @@ val shifted = interval shr 10u // Shifted right by 10: [10, 20)
 ```
 
 This protects against overflows (e.g. if `size > Int.MAX_VALUE`) but also offers better semantics.
-For example, this library supports [kotlinx datetime](https://github.com/Kotlin/kotlinx-datetime) `Instant` values which are a `Duration` apart.
+For example, this library supports `Instant` values which are a `Duration` apart.
 
 ```kotlin
 val now = Clock.System.now()
@@ -120,20 +120,17 @@ To achieve this, it directs type operations to `IntervalTypeOperations` which th
 
 The following interval types are included in `io.github.whathecode.kotlinx.interval:kotlinx-interval` on Maven:
 
-|       Type       | Values (`T`) | Distances (`TSize`) |
-|:----------------:|:------------:|:-------------------:|
-|  `ByteInterval`  |    `Byte`    |       `UByte`       |
-| `ShortInterval`  |   `Short`    |      `UShort`       |
-|  `IntInterval`   |    `Int`     |       `UInt`        |
-|  `LongInterval`  |    `Long`    |       `ULong`       |
-| `FloatInterval`  |   `Float`    |      `Double`       |
-| `DoubleInterval` |   `Double`   |      `Double`       |
-| `UByteInterval`  |   `UByte`    |       `UByte`       |
-| `UShortInterval` |   `UShort`   |      `UShort`       |
-|  `UIntInterval`  |    `UInt`    |       `UInt`        |
-| `ULongInterval`  |   `ULong`    |       `ULong`       |
-|  `CharInterval`  |    `Char`    |      `UShort`       |
-
-### Date/time intervals
-Date/time intervals are implemented as `InstantInterval` using the [kotlinx datetime](https://github.com/Kotlin/kotlinx-datetime) library.
-Since you may not always want to pull in this dependency, this class is published separately in `io.github.whathecode.kotlinx.interval:kotlinx-interval-datetime`.
+|        Type        | Values (`T`) | Distances (`TSize`) |
+|:------------------:|:------------:|:-------------------:|
+|   `ByteInterval`   |    `Byte`    |       `UByte`       |
+|  `ShortInterval`   |   `Short`    |      `UShort`       |
+|   `IntInterval`    |    `Int`     |       `UInt`        |
+|   `LongInterval`   |    `Long`    |       `ULong`       |
+|  `FloatInterval`   |   `Float`    |      `Double`       |
+|  `DoubleInterval`  |   `Double`   |      `Double`       |
+|  `UByteInterval`   |   `UByte`    |       `UByte`       |
+|  `UShortInterval`  |   `UShort`   |      `UShort`       |
+|   `UIntInterval`   |    `UInt`    |       `UInt`        |
+|  `ULongInterval`   |   `ULong`    |       `ULong`       |
+|   `CharInterval`   |    `Char`    |      `UShort`       |
+| `InstantInterval`  |  `Instant`   |     `Duration`      |

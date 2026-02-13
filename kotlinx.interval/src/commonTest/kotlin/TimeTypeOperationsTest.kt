@@ -1,9 +1,9 @@
-package io.github.whathecode.kotlinx.interval.datetime
+package io.github.whathecode.kotlinx.interval
 
 import io.github.whathecode.kotlinx.interval.test.TypeOperationsTest
-import kotlinx.datetime.Instant
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Instant
 
 
 object InstantOperationsTest : TypeOperationsTest<Instant>(
