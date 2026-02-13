@@ -3,6 +3,10 @@
 package io.github.whathecode.kotlinx.interval
 
 import kotlin.test.*
+import kotlin.time.Clock
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.seconds
 
 
 class Readme
@@ -27,5 +31,15 @@ class Readme
         val areExcluded = 50 !in splitInTwo && 85 !in splitInTwo // true
         val unite = splitInTwo + interval( 10, 90 ) // Interval: [0, 100]
         val backToStart = start == unite // true
+    }
+
+    @Test
+    fun introduction_instant_interval_example()
+    {
+        val now = Clock.System.now()
+        val interval: InstantInterval = interval( now, now + 100.seconds )
+        val areIncluded = now + 50.seconds in interval // true
+        val size: Duration = interval.size // 100 seconds
+        val shifted = interval shr 24.hours // 100 seconds 24 hours from now
     }
 }

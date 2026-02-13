@@ -2,31 +2,18 @@
 
 package io.github.whathecode.kotlinx.interval.datetime
 
+import io.github.whathecode.kotlinx.interval.InstantInterval
 import io.github.whathecode.kotlinx.interval.IntInterval
 import io.github.whathecode.kotlinx.interval.interval
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
 import kotlin.test.*
-import kotlin.time.Duration
-import kotlin.time.Duration.Companion.hours
-import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Instant
 
 
 class Readme
 {
-    @Test
-    fun introduction_instant_interval_example()
-    {
-        val now = Clock.System.now()
-        val interval: InstantInterval = interval( now, now + 100.seconds )
-        val areIncluded = now + 50.seconds in interval // true
-        val size: Duration = interval.size // 100 seconds
-        val shifted = interval shr 24.hours // 100 seconds 24 hours from now
-    }
-
     @Test
     fun introduction_common_math()
     {
