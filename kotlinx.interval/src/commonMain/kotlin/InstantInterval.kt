@@ -1,7 +1,5 @@
 package io.github.whathecode.kotlinx.interval
 
-import io.github.whathecode.kotlinx.interval.Interval
-import io.github.whathecode.kotlinx.interval.IntervalTypeOperations
 import kotlin.math.absoluteValue
 import kotlin.time.Duration
 import kotlin.time.Instant
