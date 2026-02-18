@@ -28,4 +28,19 @@ class Readme
         val uiPercentage: Double = timelineUi.getPercentageFor( mouseX )
         val selectedTime: Instant = year2025.getValueAt( uiPercentage ) // July 2nd at noon.
     }
+
+    @Test
+    fun introduction_common_math()
+    {
+        // Two intervals of different types.
+        val start2025 = LocalDateTime( 2025, 1, 1, 0, 0 ).toInstant( TimeZone.UTC )
+        val end2025 = LocalDateTime( 2026, 1, 1, 0, 0 ).toInstant( TimeZone.UTC )
+        val year2025: InstantInterval = interval( start2025, end2025 )
+        val timelineUi: IntInterval = interval( 0, 800 ) // UI element 800 pixels wide
+
+        // Find the selected time at a given UI coordinate using linear interpolation.
+        val mouseX = 400
+        val uiPercentage: Double = timelineUi.getPercentageFor( mouseX )
+        val selectedTime: Instant = year2025.getValueAt( uiPercentage ) // July 2nd at noon.
+    }
 }
