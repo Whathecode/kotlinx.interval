@@ -1,8 +1,8 @@
-package io.github.whathecode.kotlinx.interval.datetime
+package io.github.whathecode.kotlinx.interval
 
 import io.github.whathecode.kotlinx.interval.test.IntervalTest
-import kotlinx.datetime.Instant
 import kotlin.time.Duration
+import kotlin.time.Instant
 
 
 private val a = Instant.fromEpochSeconds( 0, 50 )

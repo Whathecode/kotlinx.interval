@@ -1,10 +1,9 @@
-package io.github.whathecode.kotlinx.interval.datetime
+package io.github.whathecode.kotlinx.interval
 
-import io.github.whathecode.kotlinx.interval.TypeOperations
-import kotlinx.datetime.Instant
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.DurationUnit
+import kotlin.time.Instant
 
 
 internal object InstantOperations : TypeOperations<Instant>

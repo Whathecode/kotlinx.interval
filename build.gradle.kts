@@ -21,7 +21,7 @@ if (publishPropertiesFile.exists()) {
     publishProperties.load(java.io.FileInputStream(publishPropertiesFile))
 }
 group = "io.github.whathecode.kotlinx.interval"
-version = "2.1.0"
+version = "2.2.0"
 if (properties.containsKey("snapshot"))
 {
     val versionSplit = version.toString().split("-")
@@ -32,8 +32,8 @@ if (properties.containsKey("snapshot"))
 nexusPublishing {
     repositories {
         sonatype {
-            nexusUrl.set(uri("https://s01.oss.sonatype.org/service/local/"))
-            snapshotRepositoryUrl.set(uri("https://s01.oss.sonatype.org/content/repositories/snapshots/"))
+            nexusUrl.set(uri("https://ossrh-staging-api.central.sonatype.com/service/local/"))
+            snapshotRepositoryUrl.set(uri("https://central.sonatype.com/repository/maven-snapshots/"))
             username.set(publishProperties["repository.username"] as? String)
             password.set(publishProperties["repository.password"] as? String)
         }
